@@ -13,12 +13,6 @@
 pip install jec-api
 ```
 
-*(Note: If the package is not yet on PyPI, install from source)*
-
-```bash
-pip install .
-```
-
 ## Quick Start
 
 1. **Define a Route Class**

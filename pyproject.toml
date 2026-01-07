@@ -37,8 +37,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nik/jec-api"
-Repository = "https://github.com/nik/jec-api"
+Homepage = "https://github.com/alpheay/jec"
+Repository = "https://github.com/alpheay/jec"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/jec_api"]
