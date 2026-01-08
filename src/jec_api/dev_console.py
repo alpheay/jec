@@ -299,6 +299,9 @@ def _get_console_html(base_path: str) -> str:
             --accent-blue: #3b82f6;
             --accent-violet: #8b5cf6;
             --accent-slate: #64748b;
+            --indicator-log: #64748b;
+            --indicator-speed: #eab308;
+            --indicator-version: #8b5cf6;
         }}
         
         body {{
@@ -348,11 +351,6 @@ def _get_console_html(base_path: str) -> str:
             font-weight: 600;
             color: var(--text-primary);
             letter-spacing: -0.3px;
-        }}
-        
-        .logo-text span {{
-            color: var(--text-muted);
-            font-weight: 400;
         }}
         
         .header-actions {{
@@ -411,11 +409,17 @@ def _get_console_html(base_path: str) -> str:
         
         /* Main Layout */
         .main {{
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 16px;
+            display: flex;
+            gap: 0;
             padding: 16px;
             height: calc(100vh - 60px);
+            overflow: hidden;
+        }}
+        
+        .requests-panel {{
+            flex: 1;
+            min-width: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         
         /* Panels */
@@ -426,6 +430,7 @@ def _get_console_html(base_path: str) -> str:
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }}
         
         .panel-header {{
@@ -435,6 +440,7 @@ def _get_console_html(base_path: str) -> str:
             align-items: center;
             justify-content: space-between;
             background: var(--bg-elevated);
+            flex-shrink: 0;
         }}
         
         .panel-title {{
@@ -446,15 +452,6 @@ def _get_console_html(base_path: str) -> str:
             gap: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }}
-        
-        .panel-icon {{
-            width: 16px;
-            height: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.6;
         }}
         
         .panel-count {{
@@ -471,11 +468,66 @@ def _get_console_html(base_path: str) -> str:
             overflow-y: auto;
         }}
         
+        /* Sidebar */
+        .sidebar {{
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-left: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }}
+        
+        .sidebar.visible {{
+            width: 360px;
+            opacity: 1;
+            margin-left: 16px;
+        }}
+        
+        .sidebar .panel {{
+            flex: 1;
+            min-height: 0;
+            transform: translateX(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }}
+        
+        .sidebar.visible .panel {{
+            transform: translateX(0);
+            opacity: 1;
+        }}
+        
+        .sidebar.visible .panel:nth-child(1) {{ transition-delay: 0.05s; }}
+        .sidebar.visible .panel:nth-child(2) {{ transition-delay: 0.1s; }}
+        .sidebar.visible .panel:nth-child(3) {{ transition-delay: 0.15s; }}
+        
+        .sidebar .panel.hidden {{
+            display: none;
+        }}
+        
+        .close-sidebar {{
+            padding: 4px 8px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.15s;
+        }}
+        
+        .close-sidebar:hover {{
+            border-color: var(--border-light);
+            color: var(--text-secondary);
+        }}
+        
         /* Requests */
         .request-item {{
             display: grid;
-            grid-template-columns: 56px 1fr 50px 70px;
-            gap: 12px;
+            grid-template-columns: 56px 1fr auto 50px 70px;
+            gap: 10px;
             padding: 10px 16px;
             border-bottom: 1px solid var(--border);
             align-items: center;
@@ -486,6 +538,12 @@ def _get_console_html(base_path: str) -> str:
         
         .request-item:hover {{
             background: var(--bg-hover);
+        }}
+        
+        .request-item.selected {{
+            background: var(--bg-active);
+            border-left: 2px solid var(--accent-blue);
+            padding-left: 14px;
         }}
         
         .method-badge {{
@@ -514,6 +572,40 @@ def _get_console_html(base_path: str) -> str:
             font-size: 12px;
         }}
         
+        /* Indicator Dots */
+        .indicators {{
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }}
+        
+        .indicator {{
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            opacity: 0.9;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }}
+        
+        .indicator:hover {{
+            transform: scale(1.3);
+        }}
+        
+        .indicator-log {{
+            background: var(--indicator-log);
+            box-shadow: 0 0 4px var(--indicator-log);
+        }}
+        
+        .indicator-speed {{
+            background: var(--indicator-speed);
+            box-shadow: 0 0 4px var(--indicator-speed);
+        }}
+        
+        .indicator-version {{
+            background: var(--indicator-version);
+            box-shadow: 0 0 4px var(--indicator-version);
+        }}
+        
         .status-code {{
             font-family: 'JetBrains Mono', monospace;
             font-weight: 500;
@@ -532,21 +624,9 @@ def _get_console_html(base_path: str) -> str:
             text-align: right;
         }}
         
-        /* Sidebar */
-        .sidebar {{
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            overflow: hidden;
-        }}
-        
-        .sidebar .panel {{
-            flex: 1;
-            min-height: 0;
-        }}
-        
-        /* Interactive Log Entries */
+        /* Log Items */
         .log-item {{
+            padding: 8px 12px;
             border-bottom: 1px solid var(--border);
             transition: background 0.1s;
         }}
@@ -559,24 +639,6 @@ def _get_console_html(base_path: str) -> str:
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 12px;
-            cursor: pointer;
-            user-select: none;
-        }}
-        
-        .log-expand {{
-            width: 16px;
-            height: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-dim);
-            transition: transform 0.15s;
-            font-size: 10px;
-        }}
-        
-        .log-item.expanded .log-expand {{
-            transform: rotate(90deg);
         }}
         
         .log-level {{
@@ -608,48 +670,20 @@ def _get_console_html(base_path: str) -> str:
             font-family: 'JetBrains Mono', monospace;
         }}
         
-        .log-details {{
-            display: none;
-            padding: 0 12px 10px 36px;
-            font-size: 11px;
-        }}
-        
-        .log-item.expanded .log-details {{
-            display: block;
-        }}
-        
         .log-message {{
             color: var(--text-primary);
             font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            margin-top: 6px;
             background: var(--bg-primary);
-            padding: 8px 10px;
+            padding: 6px 8px;
             border-radius: 4px;
             border: 1px solid var(--border);
             word-break: break-all;
             white-space: pre-wrap;
-            max-height: 120px;
-            overflow-y: auto;
         }}
         
-        .log-meta {{
-            margin-top: 6px;
-            display: flex;
-            gap: 12px;
-            color: var(--text-dim);
-            font-size: 10px;
-        }}
-        
-        .log-meta-item {{
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }}
-        
-        .log-meta-label {{
-            color: var(--text-muted);
-        }}
-        
-        /* Speed Metrics */
+        /* Speed Items */
         .speed-item {{
             padding: 8px 12px;
             border-bottom: 1px solid var(--border);
@@ -696,7 +730,7 @@ def _get_console_html(base_path: str) -> str:
             transition: width 0.2s ease;
         }}
         
-        /* Version Checks */
+        /* Version Items */
         .version-item {{
             padding: 8px 12px;
             border-bottom: 1px solid var(--border);
@@ -729,9 +763,6 @@ def _get_console_html(base_path: str) -> str:
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
             color: var(--text-primary);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }}
         
         .version-constraint {{
@@ -749,32 +780,12 @@ def _get_console_html(base_path: str) -> str:
         }}
         
         /* Scrollbar */
-        ::-webkit-scrollbar {{
-            width: 6px;
-            height: 6px;
-        }}
+        ::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+        ::-webkit-scrollbar-track {{ background: transparent; }}
+        ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 3px; }}
+        ::-webkit-scrollbar-thumb:hover {{ background: var(--border-light); }}
         
-        ::-webkit-scrollbar-track {{
-            background: transparent;
-        }}
-        
-        ::-webkit-scrollbar-thumb {{
-            background: var(--border);
-            border-radius: 3px;
-        }}
-        
-        ::-webkit-scrollbar-thumb:hover {{
-            background: var(--border-light);
-        }}
-        
-        /* SVG Icons */
-        .icon {{
-            width: 14px;
-            height: 14px;
-            stroke: currentColor;
-            stroke-width: 2;
-            fill: none;
-        }}
+        .icon {{ width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }}
     </style>
 </head>
 <body>
@@ -793,34 +804,35 @@ def _get_console_html(base_path: str) -> str:
     </header>
     
     <main class="main">
-        <div class="panel">
-            <div class="panel-header">
-                <span class="panel-title">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    Requests
-                    <span class="panel-count" id="request-count">0</span>
-                </span>
-            </div>
-            <div class="panel-content" id="requests-list">
-                <div class="empty-state">No requests captured yet</div>
+        <div class="requests-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        Requests
+                        <span class="panel-count" id="request-count">0</span>
+                    </span>
+                </div>
+                <div class="panel-content" id="requests-list">
+                    <div class="empty-state">No requests captured yet</div>
+                </div>
             </div>
         </div>
         
-        <div class="sidebar">
-            <div class="panel">
+        <div class="sidebar" id="sidebar">
+            <div class="panel" id="logs-panel">
                 <div class="panel-header">
                     <span class="panel-title">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                         Logs
                         <span class="panel-count" id="log-count">0</span>
                     </span>
+                    <button class="close-sidebar" onclick="closeSidebar()">Close</button>
                 </div>
-                <div class="panel-content" id="logs-list">
-                    <div class="empty-state">No logs yet</div>
-                </div>
+                <div class="panel-content" id="logs-list"></div>
             </div>
             
-            <div class="panel">
+            <div class="panel" id="speed-panel">
                 <div class="panel-header">
                     <span class="panel-title">
                         <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -828,12 +840,10 @@ def _get_console_html(base_path: str) -> str:
                         <span class="panel-count" id="speed-count">0</span>
                     </span>
                 </div>
-                <div class="panel-content" id="speed-list">
-                    <div class="empty-state">No timing data</div>
-                </div>
+                <div class="panel-content" id="speed-list"></div>
             </div>
             
-            <div class="panel">
+            <div class="panel" id="version-panel">
                 <div class="panel-header">
                     <span class="panel-title">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -841,9 +851,7 @@ def _get_console_html(base_path: str) -> str:
                         <span class="panel-count" id="version-count">0</span>
                     </span>
                 </div>
-                <div class="panel-content" id="version-list">
-                    <div class="empty-state">No version checks</div>
-                </div>
+                <div class="panel-content" id="version-list"></div>
             </div>
         </div>
     </main>
@@ -855,12 +863,13 @@ def _get_console_html(base_path: str) -> str:
         let logs = [];
         let speedMetrics = [];
         let versionChecks = [];
-        let expandedLogs = new Set();
+        let selectedRequestId = null;
         
         const requestsList = document.getElementById('requests-list');
         const logsList = document.getElementById('logs-list');
         const speedList = document.getElementById('speed-list');
         const versionList = document.getElementById('version-list');
+        const sidebar = document.getElementById('sidebar');
         const statusDot = document.getElementById('status-dot');
         const statusText = document.getElementById('status-text');
         
@@ -880,19 +889,19 @@ def _get_console_html(base_path: str) -> str:
                     logs = msg.data.logs || [];
                     speedMetrics = msg.data.speed_metrics || [];
                     versionChecks = msg.data.version_checks || [];
-                    renderAll();
+                    renderRequests();
                 }} else if (msg.type === 'request') {{
                     requests.push(msg.data);
                     renderRequests();
                 }} else if (msg.type === 'log') {{
                     logs.push(msg.data);
-                    renderLogs();
+                    if (selectedRequestId) updateSidebar();
                 }} else if (msg.type === 'speed') {{
                     speedMetrics.push(msg.data);
-                    renderSpeed();
+                    if (selectedRequestId) updateSidebar();
                 }} else if (msg.type === 'version') {{
                     versionChecks.push(msg.data);
-                    renderVersions();
+                    if (selectedRequestId) updateSidebar();
                 }}
             }};
             
@@ -904,11 +913,101 @@ def _get_console_html(base_path: str) -> str:
             }};
         }}
         
-        function renderAll() {{
+        function getRequestData(requestId) {{
+            const req = requests.find(r => r.id === requestId);
+            if (!req) return {{ logs: [], speed: [], versions: [] }};
+            
+            const reqTime = new Date(req.timestamp).getTime();
+            const tolerance = 100; // 100ms tolerance for matching
+            
+            return {{
+                logs: logs.filter(l => Math.abs(new Date(l.timestamp).getTime() - reqTime) < tolerance),
+                speed: speedMetrics.filter(s => Math.abs(new Date(s.timestamp).getTime() - reqTime) < tolerance),
+                versions: versionChecks.filter(v => Math.abs(new Date(v.timestamp).getTime() - reqTime) < tolerance)
+            }};
+        }}
+        
+        function selectRequest(requestId) {{
+            if (selectedRequestId === requestId) {{
+                closeSidebar();
+                return;
+            }}
+            
+            selectedRequestId = requestId;
             renderRequests();
-            renderLogs();
-            renderSpeed();
-            renderVersions();
+            updateSidebar();
+            sidebar.classList.add('visible');
+        }}
+        
+        function closeSidebar() {{
+            selectedRequestId = null;
+            sidebar.classList.remove('visible');
+            renderRequests();
+        }}
+        
+        function updateSidebar() {{
+            const data = getRequestData(selectedRequestId);
+            
+            // Update counts
+            document.getElementById('log-count').textContent = data.logs.length;
+            document.getElementById('speed-count').textContent = data.speed.length;
+            document.getElementById('version-count').textContent = data.versions.length;
+            
+            // Show/hide panels
+            document.getElementById('logs-panel').classList.toggle('hidden', data.logs.length === 0);
+            document.getElementById('speed-panel').classList.toggle('hidden', data.speed.length === 0);
+            document.getElementById('version-panel').classList.toggle('hidden', data.versions.length === 0);
+            
+            // Render logs
+            if (data.logs.length > 0) {{
+                logsList.innerHTML = data.logs.map(l => {{
+                    const time = new Date(l.timestamp).toLocaleTimeString();
+                    return `
+                        <div class="log-item">
+                            <div class="log-header">
+                                <span class="log-level log-level-${{l.level}}">${{l.level}}</span>
+                                <span class="log-function">${{escapeHtml(l.function)}}</span>
+                                <span class="log-time">${{time}}</span>
+                            </div>
+                            <div class="log-message">${{escapeHtml(l.message)}}</div>
+                        </div>
+                    `;
+                }}).join('');
+            }}
+            
+            // Render speed
+            if (data.speed.length > 0) {{
+                const maxTime = Math.max(...data.speed.map(s => s.duration_ms), 100);
+                speedList.innerHTML = data.speed.map(s => {{
+                    const pct = Math.min((s.duration_ms / maxTime) * 100, 100);
+                    const speedClass = s.duration_ms < 50 ? 'speed-fast' : s.duration_ms < 200 ? 'speed-medium' : 'speed-slow';
+                    const barColor = s.duration_ms < 50 ? 'var(--accent-green)' : s.duration_ms < 200 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+                    return `
+                        <div class="speed-item">
+                            <div class="speed-header">
+                                <span class="speed-function">${{escapeHtml(s.function)}}</span>
+                                <span class="speed-time ${{speedClass}}">${{s.duration_ms.toFixed(2)}}ms</span>
+                            </div>
+                            <div class="speed-bar">
+                                <div class="speed-bar-fill" style="width: ${{pct}}%; background: ${{barColor}};"></div>
+                            </div>
+                        </div>
+                    `;
+                }}).join('');
+            }}
+            
+            // Render versions
+            if (data.versions.length > 0) {{
+                versionList.innerHTML = data.versions.map(v => `
+                    <div class="version-item">
+                        <span class="version-status ${{v.passed ? 'version-pass' : 'version-fail'}}"></span>
+                        <div class="version-info">
+                            <div class="version-function">${{escapeHtml(v.function)}}</div>
+                            <div class="version-constraint">${{v.constraint}} (client: ${{v.client_version || 'none'}})</div>
+                        </div>
+                    </div>
+                `).join('');
+            }}
         }}
         
         function renderRequests() {{
@@ -922,103 +1021,24 @@ def _get_console_html(base_path: str) -> str:
                 const statusClass = r.status_code < 300 ? 'status-2xx' : 
                                    r.status_code < 400 ? 'status-3xx' :
                                    r.status_code < 500 ? 'status-4xx' : 'status-5xx';
+                const isSelected = r.id === selectedRequestId;
+                const data = getRequestData(r.id);
+                
+                const indicators = [];
+                if (data.logs.length > 0) indicators.push('<span class="indicator indicator-log" title="Logs"></span>');
+                if (data.speed.length > 0) indicators.push('<span class="indicator indicator-speed" title="Performance"></span>');
+                if (data.versions.length > 0) indicators.push('<span class="indicator indicator-version" title="Version Check"></span>');
+                
                 return `
-                    <div class="request-item">
+                    <div class="request-item ${{isSelected ? 'selected' : ''}}" onclick="selectRequest('${{r.id}}')">
                         <span class="method-badge method-${{r.method}}">${{r.method}}</span>
                         <span class="request-path">${{escapeHtml(r.path)}}</span>
+                        <span class="indicators">${{indicators.join('')}}</span>
                         <span class="status-code ${{statusClass}}">${{r.status_code}}</span>
                         <span class="duration">${{r.duration_ms.toFixed(1)}}ms</span>
                     </div>
                 `;
             }}).join('');
-        }}
-        
-        function toggleLog(id) {{
-            if (expandedLogs.has(id)) {{
-                expandedLogs.delete(id);
-            }} else {{
-                expandedLogs.add(id);
-            }}
-            renderLogs();
-        }}
-        
-        function renderLogs() {{
-            document.getElementById('log-count').textContent = logs.length;
-            if (logs.length === 0) {{
-                logsList.innerHTML = '<div class="empty-state">No logs yet</div>';
-                return;
-            }}
-            
-            logsList.innerHTML = [...logs].reverse().slice(0, 100).map(l => {{
-                const time = new Date(l.timestamp).toLocaleTimeString();
-                const isExpanded = expandedLogs.has(l.id);
-                return `
-                    <div class="log-item ${{isExpanded ? 'expanded' : ''}}" onclick="toggleLog('${{l.id}}')">
-                        <div class="log-header">
-                            <span class="log-expand">&#9654;</span>
-                            <span class="log-level log-level-${{l.level}}">${{l.level}}</span>
-                            <span class="log-function">${{escapeHtml(l.function)}}</span>
-                            <span class="log-time">${{time}}</span>
-                        </div>
-                        <div class="log-details">
-                            <div class="log-message">${{escapeHtml(l.message)}}</div>
-                            ${{l.args || l.result ? `
-                            <div class="log-meta">
-                                ${{l.args ? `<span class="log-meta-item"><span class="log-meta-label">args:</span> ${{escapeHtml(l.args)}}</span>` : ''}}
-                                ${{l.result ? `<span class="log-meta-item"><span class="log-meta-label">result:</span> ${{escapeHtml(l.result.substring(0, 50))}}</span>` : ''}}
-                            </div>
-                            ` : ''}}
-                        </div>
-                    </div>
-                `;
-            }}).join('');
-        }}
-        
-        function renderSpeed() {{
-            document.getElementById('speed-count').textContent = speedMetrics.length;
-            if (speedMetrics.length === 0) {{
-                speedList.innerHTML = '<div class="empty-state">No timing data</div>';
-                return;
-            }}
-            
-            const maxTime = Math.max(...speedMetrics.map(s => s.duration_ms), 100);
-            
-            speedList.innerHTML = [...speedMetrics].reverse().slice(0, 50).map(s => {{
-                const pct = Math.min((s.duration_ms / maxTime) * 100, 100);
-                const speedClass = s.duration_ms < 50 ? 'speed-fast' : 
-                                  s.duration_ms < 200 ? 'speed-medium' : 'speed-slow';
-                const barColor = s.duration_ms < 50 ? 'var(--accent-green)' : 
-                                s.duration_ms < 200 ? 'var(--accent-yellow)' : 'var(--accent-red)';
-                return `
-                    <div class="speed-item">
-                        <div class="speed-header">
-                            <span class="speed-function">${{escapeHtml(s.function)}}</span>
-                            <span class="speed-time ${{speedClass}}">${{s.duration_ms.toFixed(2)}}ms</span>
-                        </div>
-                        <div class="speed-bar">
-                            <div class="speed-bar-fill" style="width: ${{pct}}%; background: ${{barColor}};"></div>
-                        </div>
-                    </div>
-                `;
-            }}).join('');
-        }}
-        
-        function renderVersions() {{
-            document.getElementById('version-count').textContent = versionChecks.length;
-            if (versionChecks.length === 0) {{
-                versionList.innerHTML = '<div class="empty-state">No version checks</div>';
-                return;
-            }}
-            
-            versionList.innerHTML = [...versionChecks].reverse().slice(0, 30).map(v => `
-                <div class="version-item">
-                    <span class="version-status ${{v.passed ? 'version-pass' : 'version-fail'}}"></span>
-                    <div class="version-info">
-                        <div class="version-function">${{escapeHtml(v.function)}}</div>
-                        <div class="version-constraint">${{v.constraint}} (client: ${{v.client_version || 'none'}})</div>
-                    </div>
-                </div>
-            `).join('');
         }}
         
         function escapeHtml(str) {{
@@ -1036,8 +1056,9 @@ def _get_console_html(base_path: str) -> str:
             logs = [];
             speedMetrics = [];
             versionChecks = [];
-            expandedLogs.clear();
-            renderAll();
+            selectedRequestId = null;
+            sidebar.classList.remove('visible');
+            renderRequests();
         }}
         
         connect();

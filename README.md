@@ -1,11 +1,15 @@
 # JEC-API
 
+A powerful wrapper around FastAPI that brings class-based routing, strict method mapping, and modern developer tools to your API development.
+
 ## Features
 
-- **Class-Based Routes**: Group related endpoints into a single class.
-- **Strict Method Mapping**: Methods named `get`, `post`, `put`, `delete`, `patch`, `options`, or `head` are automatically mapped to their respective HTTP verbs.
-- **Data Object Support**: Built-in support for **Pydantic models**. Type hints are automatically used for request body validation and response model registry.
-- **FastAPI Native**: Fully compatible with FastAPI dependencies and OpenAPI generation.
+- **Class-Based Routes**: Group related endpoints into a single class for better organization.
+- **Strict Method Mapping**: Methods named `get`, `post`, `put`, etc., are automatically mapped to HTTP verbs.
+- **Data Object Support**: Native Pydantic integration for automatic request/response validation and schema generation.
+- **API Decorators**: Built-in `@log`, `@speed`, and `@version` decorators for observability and control.
+- **Programmatic Configuration**: Unified `core.tinker()` method to configure FastAPI and Uvicorn.
+- **JEC DevTools**: Real-time, dark-themed developer console at `/__dev__` for monitoring traffic and performance.
 
 ## Installation
 
@@ -18,123 +22,74 @@ pip install jec-api
 1. **Define a Route Class**
 
 ```python
-# routes.py
 from pydantic import BaseModel
-from jec_api import Route
+from jec_api import Route, log, speed
 
 class UserResponse(BaseModel):
     id: int
     name: str
 
-class CreateUser(BaseModel):
-    name: str
-
 class Users(Route):
-    # Strictly mapped to GET /users
+    @log
+    @speed
     async def get(self) -> list[UserResponse]:
-        """List all users"""
+        """List all users with logging and speed tracking"""
         return [UserResponse(id=1, name="Alice")]
-
-    # Strictly mapped to POST /users
-    async def post(self, data: CreateUser) -> UserResponse:
-        """Create a user"""
-        return UserResponse(id=2, name=data.name)
-
-class UserDetail(Route):
-    # Custom path with parameter
-    path = "/users/{user_id}"
-
-    async def get(self, user_id: int) -> UserResponse:
-        """Get user by ID"""
-        return UserResponse(id=user_id, name="Alice")
 ```
 
-2. **Create the App**
+2. **Configure and Run**
 
 ```python
-# main.py
 from jec_api import Core
-
-core = Core(title="My API")
-
-# Auto-discover routes from a module/package
-core.discover("routes")
-
-# Or register manually
 from routes import Users
+
+core = Core()
+core.tinker(
+    title="My API",
+    dev=True,      # Enable JEC DevTools
+    reload=True    # Auto-reload on changes
+)
+
 core.register(Users)
-```
 
-3. **Run it**
-
-```bash
-uvicorn main:core --reload
+if __name__ == "__main__":
+    core.run(port=8000)
 ```
 
 ## Usage Guide
 
 ### Defining Routes
 
-Inherit from `jec_api.Route` to create a route group. The class name is automatically converted to kebab-case to form the base path (e.g., `UserProfiles` -> `/user-profiles`), unless you override it with the `path` attribute.
+Inherit from `jec_api.Route`. The class name is converted to kebab-case for the base path (e.g., `UserProfiles` -> `/user-profiles`), unless overridden with the `path` attribute.
 
 ### Method Mapping
 
-JEC-API maps methods to HTTP verbs based on their exact names:
+Methods named exactly after HTTP verbs (e.g., `get`, `post`) are registered as endpoints. Others are ignored.
 
-| Method Name | HTTP Verb | Path |
-|-------------|-----------|------|
-| `get()`     | GET       | `/`  |
-| `post()`    | POST      | `/`  |
-| `put()`     | PUT       | `/`  |
-| `delete()`  | DELETE    | `/`  |
-| `patch()`   | PATCH     | `/`  |
-| `options()` | OPTIONS   | `/`  |
-| `head()`    | HEAD      | `/`  |
+### API Decorators
 
-> **Note**: Methods with other names (e.g., `get_users`, `helper_method`) are ignored and will not be registered as API endpoints.
+Enhance your endpoints with built-in decorators:
 
-### Path Parameters
+- **`@log`**: Logs function calls, arguments, and return values/exceptions.
+- **`@speed`**: Measures execution time in milliseconds.
+- **`@version(">=1.0.0")`**: Enforces semver constraints via the `X-API-Version` header.
 
-To define routes with path parameters, override the `path` attribute on the `Route` class.
+### Configuration (`core.tinker()`)
 
-```python
-class Users(Route):
-    path = "/users/{id}"
-    
-    async def get(self, id: int):
-        return {"id": id}
-```
+The `tinker()` method provides a unified interface for configuration:
 
-### Data Validation and Objects
+- **FastAPI Options**: `title`, `description`, `version`, `docs_url`, etc.
+- **Uvicorn Options**: `host`, `port`, `reload`, `log_level`, etc.
+- **DevTools**: Set `dev=True` to enable the developer console.
+- **Versioning**: `strict_versioning=True` to require version headers on all versioned routes.
 
-JEC-API leverages Pydantic for data validation and schema generation.
+### JEC DevTools
 
-1.  **Request Body**: The type hint of the first non-`self` parameter is used as the request body.
-2.  **Response Model**: The return type hint is used as the `response_model` for the OpenAPI schema and serialization.
-
-```python
-class Users(Route):
-    async def post(self, data: UserSchema) -> UserResponse:
-        # data is automatically validated and parsed
-        return UserResponse(...)
-```
-
-### Manual Registration
-
-You can register routes manually if you prefer not to use auto-discovery:
-
-```python
-from my_routes import MyRoute
-app.register(MyRoute, tags=["Custom Tag"])
-```
-
-### Auto-Discovery
-
-The `discover()` method recursively searches the specified package for any classes inheriting from `Route` and registers them.
-
-```python
-app.discover("src.routes")
-```
+Access a premium, real-time monitoring dashboard at `/__dev__` (or your custom `dev_path`). It provides:
+- Live request/response tracking via SSE.
+- Visual execution timing (Green/Yellow/Red).
+- Expanded logs for @log decorated methods.
+- Version check results.
 
 ## License
 
