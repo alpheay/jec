@@ -99,6 +99,19 @@ def get_tester_html() -> tuple[str, str, str]:
                         <div class="path-display" id="selected-path">/api/path</div>
                     </div>
                     
+                    <div class="headers-section">
+                        <div class="headers-toggle" onclick="toggleHeaders()">
+                            <svg class="headers-chevron" id="headers-chevron" viewBox="0 0 24 24">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                            <span class="headers-title">Headers</span>
+                            <span class="headers-count" id="headers-count">2</span>
+                        </div>
+                        <div class="headers-list" id="headers-list">
+                            <!-- Headers populated via JS -->
+                        </div>
+                    </div>
+                    
                     <div class="workspace-split">
                         <div class="workspace-input">
                             <div class="section-title">Request Body</div>
@@ -106,12 +119,10 @@ def get_tester_html() -> tuple[str, str, str]:
                                 <textarea id="request-editor" spellcheck="false" placeholder="Enter request body..."></textarea>
                             </div>
                             <div class="input-actions">
-                                <button class="tester-btn tester-btn-primary" id="send-btn" onclick="sendRequest()">
-                                    <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                    <span>Send Request</span>
+                                <button class="tester-btn" id="send-btn" onclick="sendRequest()">
+                                    <span>Send</span>
                                 </button>
                                 <button class="tester-btn" onclick="resetDefaultBody()">
-                                    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
                                     Reset
                                 </button>
                             </div>
@@ -204,42 +215,135 @@ def get_tester_html() -> tuple[str, str, str]:
     }
     
     .search-box input:focus {
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        border-color: var(--border-light);
     }
     
     .endpoint-list {
         flex: 1;
         overflow-y: auto;
-        padding: 8px 0;
+        padding: 8px;
     }
     
-    .endpoint-item {
-        padding: 12px 16px;
+    .endpoint-group {
+        margin-bottom: 4px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        background: var(--bg-card);
+        transition: all 0.2s ease;
+    }
+    
+    .endpoint-group.expanded {
+        border-color: var(--border-light);
+    }
+    
+    .endpoint-group-header {
+        padding: 12px 14px;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin: 2px 8px;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        transition: all 0.15s ease;
+        gap: 10px;
+        transition: background 0.15s ease;
+    }
+    
+    .endpoint-group-header:hover {
+        background: var(--bg-hover);
+    }
+    
+    .endpoint-group.expanded .endpoint-group-header {
+        background: var(--bg-elevated);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .endpoint-group-chevron {
+        width: 16px;
+        height: 16px;
+        stroke: var(--text-dim);
+        stroke-width: 2;
+        fill: none;
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+    }
+    
+    .endpoint-group.expanded .endpoint-group-chevron {
+        transform: rotate(90deg);
+    }
+    
+    .endpoint-group-path {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        color: var(--text-primary);
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .endpoint-group-count {
+        font-size: 11px;
+        color: var(--text-dim);
+        background: var(--bg-primary);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    
+    .endpoint-group-methods {
+        display: flex;
+        gap: 4px;
+    }
+    
+    .endpoint-group-methods .method-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+    }
+    
+    .method-dot-GET { background: var(--accent-green); }
+    .method-dot-POST { background: var(--accent-blue); }
+    .method-dot-PUT { background: var(--accent-yellow); }
+    .method-dot-DELETE { background: var(--accent-red); }
+    .method-dot-PATCH { background: var(--accent-violet); }
+    
+    .endpoint-group-items {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+    }
+    
+    .endpoint-group.expanded .endpoint-group-items {
+        max-height: 500px;
+    }
+    
+    .endpoint-item {
+        padding: 10px 14px 10px 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+        transition: all 0.1s ease;
+    }
+    
+    .endpoint-item:last-child {
+        border-bottom: none;
     }
     
     .endpoint-item:hover {
         background: var(--bg-hover);
-        border-color: var(--border);
     }
     
     .endpoint-item.active {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
-        border-color: rgba(59, 130, 246, 0.3);
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        background: var(--bg-active);
+    }
+    
+    .endpoint-item .method-badge {
+        font-size: 9px;
+        padding: 2px 6px;
     }
     
     .endpoint-item .path {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 12px;
+        font-size: 11px;
         color: var(--text-secondary);
         white-space: nowrap;
         overflow: hidden;
@@ -315,6 +419,167 @@ def get_tester_html() -> tuple[str, str, str]:
         font-weight: 500;
     }
     
+    .headers-section {
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-primary);
+    }
+    
+    .headers-toggle {
+        padding: 10px 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    
+    .headers-toggle:hover {
+        background: var(--bg-hover);
+    }
+    
+    .headers-chevron {
+        width: 14px;
+        height: 14px;
+        stroke: var(--text-dim);
+        stroke-width: 2;
+        fill: none;
+        transition: transform 0.2s ease;
+    }
+    
+    .headers-section.expanded .headers-chevron {
+        transform: rotate(90deg);
+    }
+    
+    .headers-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .headers-count {
+        font-size: 10px;
+        color: var(--text-dim);
+        background: var(--bg-card);
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-left: auto;
+    }
+    
+    .headers-list {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+        background: var(--bg-card);
+    }
+    
+    .headers-section.expanded .headers-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .header-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 24px;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .header-row:last-child {
+        border-bottom: none;
+    }
+    
+    .header-row input {
+        flex: 1;
+        padding: 6px 10px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text-primary);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+    
+    .header-row input:focus {
+        border-color: var(--border-light);
+    }
+    
+    .header-row input::placeholder {
+        color: var(--text-dim);
+    }
+    
+    .header-row input.header-key {
+        flex: 0.4;
+    }
+    
+    .header-row input.header-value {
+        flex: 0.6;
+    }
+    
+    .header-row-remove {
+        width: 24px;
+        height: 24px;
+        background: transparent;
+        border: none;
+        color: var(--text-dim);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: all 0.15s;
+    }
+    
+    .header-row-remove:hover {
+        background: var(--bg-hover);
+        color: var(--accent-red);
+    }
+    
+    .header-row-remove svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+    }
+    
+    .header-add-row {
+        padding: 8px 24px;
+    }
+    
+    .header-add-btn {
+        padding: 4px 10px;
+        background: transparent;
+        border: 1px dashed var(--border);
+        border-radius: 4px;
+        color: var(--text-dim);
+        cursor: pointer;
+        font-size: 11px;
+        font-family: inherit;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .header-add-btn:hover {
+        border-color: var(--border-light);
+        color: var(--text-secondary);
+        background: var(--bg-hover);
+    }
+    
+    .header-add-btn svg {
+        width: 12px;
+        height: 12px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+    }
+    
     .workspace-split {
         flex: 1;
         display: flex;
@@ -362,8 +627,7 @@ def get_tester_html() -> tuple[str, str, str]:
     }
     
     .editor-container:focus-within {
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        border-color: var(--border-light);
     }
     
     #request-editor {
@@ -411,58 +675,42 @@ def get_tester_html() -> tuple[str, str, str]:
     .input-actions {
         margin-top: 16px;
         display: flex;
-        gap: 12px;
+        gap: 10px;
     }
     
     .tester-btn {
-        padding: 10px 18px;
+        padding: 6px 12px;
         background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 4px;
         color: var(--text-secondary);
         cursor: pointer;
-        font-size: 13px;
+        font-size: 12px;
         font-family: inherit;
-        font-weight: 500;
-        transition: all 0.2s ease;
+        transition: all 0.15s;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
     
     .tester-btn:hover {
         background: var(--bg-hover);
         border-color: var(--border-light);
         color: var(--text-primary);
-        transform: translateY(-1px);
     }
     
     .tester-btn:active {
-        transform: translateY(0);
+        background: var(--bg-active);
     }
     
-    .tester-btn-primary {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        border: none;
-        color: white;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-    
-    .tester-btn-primary:hover {
-        background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-        color: white;
-    }
-    
-    .tester-btn-primary:disabled {
-        opacity: 0.6;
+    .tester-btn:disabled {
+        opacity: 0.5;
         cursor: not-allowed;
-        transform: none !important;
     }
     
     .tester-btn svg {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         stroke: currentColor;
         stroke-width: 2;
         fill: none;
@@ -502,11 +750,11 @@ def get_tester_html() -> tuple[str, str, str]:
     
     .loading-spinner {
         display: inline-block;
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(255,255,255,0.3);
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--border);
         border-radius: 50%;
-        border-top-color: white;
+        border-top-color: var(--text-secondary);
         animation: spin 0.8s linear infinite;
     }
     
@@ -515,9 +763,83 @@ def get_tester_html() -> tuple[str, str, str]:
     }
     """
     
-    js = """
+    js = r"""
     let endpoints = [];
     let selectedEndpoint = null;
+    let expandedGroup = null;
+    let headersExpanded = false;
+    let requestHeaders = [];
+    
+    const defaultHeaders = [
+        { key: 'Content-Type', value: 'application/json' },
+        { key: 'Accept', value: 'application/json' }
+    ];
+    
+    function initHeaders() {
+        requestHeaders = [...defaultHeaders];
+        renderHeaders();
+    }
+    
+    function toggleHeaders() {
+        headersExpanded = !headersExpanded;
+        const section = document.querySelector('.headers-section');
+        if (headersExpanded) {
+            section.classList.add('expanded');
+        } else {
+            section.classList.remove('expanded');
+        }
+    }
+    
+    function renderHeaders() {
+        const list = document.getElementById('headers-list');
+        const count = document.getElementById('headers-count');
+        count.textContent = requestHeaders.length;
+        
+        list.innerHTML = requestHeaders.map((h, i) => `
+            <div class="header-row">
+                <input type="text" class="header-key" placeholder="Header name" 
+                       value="${escapeHtml(h.key)}" onchange="updateHeader(${i}, 'key', this.value)">
+                <input type="text" class="header-value" placeholder="Value" 
+                       value="${escapeHtml(h.value)}" onchange="updateHeader(${i}, 'value', this.value)">
+                <button class="header-row-remove" onclick="removeHeader(${i})" title="Remove">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+        `).join('') + `
+            <div class="header-add-row">
+                <button class="header-add-btn" onclick="addHeader()">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Add Header
+                </button>
+            </div>
+        `;
+    }
+    
+    function updateHeader(index, field, value) {
+        if (requestHeaders[index]) {
+            requestHeaders[index][field] = value;
+        }
+    }
+    
+    function addHeader() {
+        requestHeaders.push({ key: '', value: '' });
+        renderHeaders();
+    }
+    
+    function removeHeader(index) {
+        requestHeaders.splice(index, 1);
+        renderHeaders();
+    }
+    
+    function getHeadersObject() {
+        const headers = {};
+        for (const h of requestHeaders) {
+            if (h.key.trim()) {
+                headers[h.key.trim()] = h.value;
+            }
+        }
+        return headers;
+    }
     
     async function loadEndpoints() {
         try {
@@ -534,22 +856,84 @@ def get_tester_html() -> tuple[str, str, str]:
         renderEndpoints(query);
     }
     
+    function groupEndpoints(filtered) {
+        const groups = {};
+        for (const e of filtered) {
+            // Extract base path (first segment after leading /)
+            const parts = e.path.split('/').filter(Boolean);
+            const basePath = parts.length > 0 ? '/' + parts[0] : e.path;
+            
+            if (!groups[basePath]) {
+                groups[basePath] = { path: basePath, endpoints: [], methods: new Set() };
+            }
+            groups[basePath].endpoints.push(e);
+            groups[basePath].methods.add(e.method);
+        }
+        return Object.values(groups);
+    }
+    
     function renderEndpoints(query = '') {
         const list = document.getElementById('endpoint-list');
-        list.innerHTML = endpoints
-            .filter(e => e.path.toLowerCase().includes(query) || e.method.toLowerCase().includes(query))
-            .map(e => `
-                <div class="endpoint-item ${selectedEndpoint && selectedEndpoint.path === e.path && selectedEndpoint.method === e.method ? 'active' : ''}" 
-                     onclick="selectEndpoint('${e.method}', '${e.path}')">
-                    <span class="method-badge method-${e.method}">${e.method}</span>
-                    <span class="path">${escapeHtml(e.path)}</span>
+        const filtered = endpoints.filter(e => 
+            e.path.toLowerCase().includes(query) || e.method.toLowerCase().includes(query)
+        );
+        
+        const groups = groupEndpoints(filtered);
+        
+        list.innerHTML = groups.map(g => {
+            const isExpanded = expandedGroup === g.path;
+            const methodDots = [...g.methods].map(m => 
+                `<span class="method-dot method-dot-${m}" title="${m}"></span>`
+            ).join('');
+            
+            const endpointItems = g.endpoints.map(e => {
+                const isActive = selectedEndpoint && 
+                    selectedEndpoint.path === e.path && 
+                    selectedEndpoint.method === e.method;
+                return `
+                    <div class="endpoint-item ${isActive ? 'active' : ''}" 
+                         onclick="event.stopPropagation(); selectEndpoint('${e.method}', '${e.path}')">
+                        <span class="method-badge method-${e.method}">${e.method}</span>
+                        <span class="path">${escapeHtml(e.path)}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            return `
+                <div class="endpoint-group ${isExpanded ? 'expanded' : ''}" data-path="${g.path}">
+                    <div class="endpoint-group-header" onclick="toggleGroup('${g.path}')">
+                        <svg class="endpoint-group-chevron" viewBox="0 0 24 24">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                        <span class="endpoint-group-path">${escapeHtml(g.path)}</span>
+                        <span class="endpoint-group-methods">${methodDots}</span>
+                        <span class="endpoint-group-count">${g.endpoints.length}</span>
+                    </div>
+                    <div class="endpoint-group-items">
+                        ${endpointItems}
+                    </div>
                 </div>
-            `).join('');
+            `;
+        }).join('');
+    }
+    
+    function toggleGroup(path) {
+        if (expandedGroup === path) {
+            expandedGroup = null;
+        } else {
+            expandedGroup = path;
+        }
+        renderEndpoints(document.getElementById('endpoint-search').value.toLowerCase());
     }
     
     function selectEndpoint(method, path) {
         selectedEndpoint = endpoints.find(e => e.method === method && e.path === path);
         if (!selectedEndpoint) return;
+        
+        // Auto-expand the group containing this endpoint
+        const parts = path.split('/').filter(Boolean);
+        const basePath = parts.length > 0 ? '/' + parts[0] : path;
+        expandedGroup = basePath;
         
         renderEndpoints(document.getElementById('endpoint-search').value.toLowerCase());
         
@@ -561,6 +945,7 @@ def get_tester_html() -> tuple[str, str, str]:
         document.getElementById('selected-path').textContent = selectedEndpoint.path;
         
         resetDefaultBody();
+        initHeaders();
         document.getElementById('response-viewer').textContent = '';
         document.getElementById('response-status').classList.add('hidden');
         document.getElementById('response-time').classList.add('hidden');
@@ -623,9 +1008,7 @@ def get_tester_html() -> tuple[str, str, str]:
         try {
             const options = {
                 method: selectedEndpoint.method,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: getHeadersObject()
             };
             
             // Add body if applicable

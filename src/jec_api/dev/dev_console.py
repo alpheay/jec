@@ -406,7 +406,7 @@ def _get_console_html(base_path: str, tester_html: str = "", tester_css: str = "
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 5px 10px;
+            padding: 6px 12px;
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 4px;
