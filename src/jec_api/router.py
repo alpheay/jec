@@ -1,7 +1,5 @@
 """Core - FastAPI wrapper with class-based route registration."""
 
-import asyncio
-import inspect
 from typing import Any, Callable, List, Type, Optional
 from fastapi import FastAPI, APIRouter
 from fastapi.routing import APIRoute
@@ -55,7 +53,7 @@ class Core(FastAPI):
             router_kwargs["tags"] = [route_class.__name__]
         
         # Register each endpoint
-        for http_method, sub_path, method_func, type_hints in endpoints:
+        for http_method, sub_path, method_func in endpoints:
             # Build full path
             if sub_path == "/":
                 full_path = base_path
@@ -65,9 +63,6 @@ class Core(FastAPI):
             # Bind the method to the instance
             bound_method = getattr(instance, method_func.__name__)
             
-            # Check for Pydantic body parameters
-            endpoint_func = self._create_endpoint(bound_method, type_hints)
-            
             # Get the appropriate router method (get, post, etc.)
             router_method = getattr(self, http_method.lower())
             
@@ -75,56 +70,10 @@ class Core(FastAPI):
             router_method(
                 full_path,
                 **router_kwargs,
-            )(endpoint_func)
+            )(bound_method)
         
         self._registered_routes.append(route_class)
         return self
-    
-    def _create_endpoint(self, bound_method: Callable, type_hints: dict) -> Callable:
-        """
-        Create an endpoint function with proper signature for FastAPI.
-        
-        If type hints contain Pydantic models, they become body parameters.
-        Path parameters are automatically extracted from the path by FastAPI.
-        """
-        from pydantic import BaseModel
-        import functools
-        
-        # Separate body params (Pydantic models) from other params (path/query)
-        body_params = {}
-        other_params = {}
-        
-        for param_name, param_type in type_hints.items():
-            if isinstance(param_type, type) and issubclass(param_type, BaseModel):
-                body_params[param_name] = param_type
-            else:
-                other_params[param_name] = param_type
-        
-        # If no body params, just return the bound method as-is
-        if not body_params:
-            return bound_method
-        
-        # Create a wrapper that FastAPI can introspect
-        # We need to build a function with the correct signature dynamically
-        
-        # For simplicity, we'll handle the common case of a single body param
-        if len(body_params) == 1:
-            body_param_name, body_model = list(body_params.items())[0]
-            
-            @functools.wraps(bound_method)
-            async def wrapper(**kwargs):
-                return await bound_method(**kwargs) if asyncio.iscoroutinefunction(bound_method) else bound_method(**kwargs)
-            
-            # Update wrapper's annotations so FastAPI picks up the body param
-            sig = inspect.signature(bound_method)
-            wrapper.__annotations__ = {**type_hints}
-            wrapper.__signature__ = sig
-            
-            return wrapper
-        
-        # Multiple body params or complex case - just return bound method
-        # FastAPI will handle based on annotations
-        return bound_method
     
     def discover(
         self,

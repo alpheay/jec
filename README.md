@@ -2,10 +2,10 @@
 
 ## Features
 
-- **Class-Based Routes**: Organize endpoints into clean, reusable classes.
-- **Auto-Discovery**: Automatically find and register routes from your packages.
-- **Smart Naming**: Convention-over-configuration for HTTP methods and paths.
-- **FastAPI Power**: Built on top of FastAPI, retaining all its performance and features.
+- **Class-Based Routes**: Group related endpoints (e.g., CRUD operations) into a single class.
+- **Auto-Discovery**: Automatically find and register route classes from your project packages.
+- **Smart Method Naming**: API paths and HTTP methods are inferred from your method names (e.g., `get_by_id` becomes `GET /{id}`).
+- **FastAPI Native**: Fully compatible with FastAPI dependencies, models, and OpenAPI generation.
 
 ## Installation
 
