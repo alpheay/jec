@@ -85,25 +85,19 @@ class MyRoute(Route):
             <section className="mb-12">
                 <h2 className="text-2xl font-semibold text-foreground mb-4">Request & Response Types</h2>
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                    JEC fully supports Pydantic models for request validation and response serialization, just like standard FastAPI.
+                    JEC uses Pydantic models for robust validation and serialization.
                 </p>
-                <CodeBlock
-                    language="python"
-                    code={`from pydantic import BaseModel
-
-class CreateItem(BaseModel):
-    name: str
-    price: float
-
-class ItemResponse(BaseModel):
-    id: int
-    name: str
-
-class Items(Route):
-    # JEC automatically detects types from type hints
-    async def post(self, item: CreateItem) -> ItemResponse:
-        return ItemResponse(id=1, name=item.name)`}
-                />
+                <div className="flex">
+                    <a
+                        href="/docs/routes/types"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-accent-blue/10 text-accent-blue font-medium hover:bg-accent-blue/20 transition-colors"
+                    >
+                        Learn about Types
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
             </section>
         </article>
     );

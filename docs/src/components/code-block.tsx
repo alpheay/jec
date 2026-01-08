@@ -22,6 +22,9 @@ interface CodeBlockProps {
     className?: string;
 }
 
+// Set manual mode to prevent auto-highlighting race conditions
+Prism.manual = true;
+
 export function CodeBlock({
     code,
     language = "typescript",
@@ -101,12 +104,17 @@ export function CodeBlock({
                     </div>
                 )}
                 <pre
+                    suppressHydrationWarning
                     className={cn(
                         "p-6 text-sm leading-relaxed overflow-x-auto font-mono",
                         showLineNumbers && "pl-14"
                     )}
                 >
-                    <code ref={codeRef} className={`language-${language}`}>
+                    <code
+                        ref={codeRef}
+                        className={`language-${language}`}
+                        suppressHydrationWarning
+                    >
                         {code}
                     </code>
                 </pre>

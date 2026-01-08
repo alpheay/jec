@@ -26,6 +26,28 @@ class Core(FastAPI):
         self.strict_versioning: bool = False
         self._dev_enabled: bool = False
         self._dev_path: str = "/__dev__"
+        self.auth_handler: Optional[Callable] = None
+    
+    def set_auth_handler(self, handler: Callable) -> "Core":
+        """
+        Register a custom authentication handler for the application.
+        
+        The handler will be called by the @auth decorator.
+        
+        Args:
+            handler: An async function with the signature:
+                     `async def handler(request: Request, roles: list[str]) -> bool`
+                     
+                     Should return:
+                     - `True` if authentication/authorization succeeds.
+                     - `False` to deny access (403 Forbidden).
+                     - Can also raise `HTTPException` directly for custom errors.
+        
+        Returns:
+            Self for method chaining
+        """
+        self.auth_handler = handler
+        return self
     
     def register(self, route_class: Type[Route], **router_kwargs) -> "Core":
         """

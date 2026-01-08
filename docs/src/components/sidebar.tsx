@@ -43,7 +43,14 @@ const navigation: NavSection[] = [
         title: "Core Concepts",
         items: [
             { title: "Core Application", href: "/docs/core", icon: <Cpu className="w-4 h-4" /> },
-            { title: "Routes", href: "/docs/routes", icon: <Layers className="w-4 h-4" /> },
+            {
+                title: "Routes",
+                href: "/docs/routes",
+                icon: <Layers className="w-4 h-4" />,
+                items: [
+                    { title: "Types & Validation", href: "/docs/routes/types" }
+                ]
+            },
             { title: "Decorators", href: "/docs/decorators", icon: <Code2 className="w-4 h-4" /> },
             { title: "Developer Tools", href: "/docs/dev-tools", icon: <Terminal className="w-4 h-4" /> },
         ],

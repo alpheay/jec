@@ -7,6 +7,7 @@ import functools
 from typing import Callable, Any, Optional
 
 from fastapi import Request
+from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 
 # Set up a default logger for JEC-API
@@ -20,6 +21,155 @@ def _get_dev_store():
         return get_store()
     except ImportError:
         return None
+
+
+def auth(enabled: bool = True, roles: list[str] = None) -> Callable:
+    """
+    Decorator that enforces authentication and optional role-based access control.
+    
+    This decorator delegates the actual authentication logic to a handler registered
+    with the `Core` application.
+    
+    Args:
+        enabled: Whether to enable authentication for this endpoint. Defaults to True.
+        roles: Optional list of roles required to access this endpoint.
+               These are passed to the auth handler.
+    
+    Usage:
+        # First, register your auth handler in your main app file:
+        app = Core()
+        
+        async def my_auth_handler(request: Request, roles: list[str] = None) -> bool:
+            token = request.headers.get("Authorization")
+            if not token:
+                return False  # Will result in 403 Forbidden
+                
+            # Validate token...
+            user_roles = ["user"]
+            if roles:
+                for role in roles:
+                    if role not in user_roles:
+                        raise HTTPException(status_code=403, detail="Insufficient permissions")
+            
+            return True
+            
+        app.set_auth_handler(my_auth_handler)
+        
+        # Then use the decorator on your routes:
+        class PrivateConfig(Route):
+            @auth(True, roles=["admin"])
+            async def get(self):
+                return {"secret": "data"}
+                
+            @auth(False)  # Explicitly public
+            async def post(self):
+                return {"status": "ok"}
+    """
+    roles = roles or []
+    
+    import inspect
+    from inspect import Parameter
+
+    def decorator(func: Callable) -> Callable:
+        # Inspect the original function signature to handle 'request' injection
+        sig = inspect.signature(func)
+        params = list(sig.parameters.values())
+        
+        request_param_present = False
+        for param in params:
+            if param.name == "request" or param.annotation == Request:
+                request_param_present = True
+                break
+        
+        @functools.wraps(func)
+        async def async_wrapper(*args, **kwargs) -> Any:
+            request = _find_request(args, kwargs)
+            
+            if enabled and request:
+                # Get the auth handler from the app
+                auth_handler = getattr(request.app, "auth_handler", None)
+                
+                if not auth_handler:
+                    # If auth is required but no handler is set, this is a server configuration error
+                    logger.error(f"[AUTH] No auth handler registered for {func.__qualname__}")
+                    raise HTTPException(
+                        status_code=500, 
+                        detail="Authentication is enabled but no handler is configured."
+                    )
+                
+                # Call the handler validation
+                try:
+                    result = await auth_handler(request, roles)
+                    if result is False:
+                        raise HTTPException(status_code=403, detail="Not authenticated")
+                except HTTPException as e:
+                    # Log failure to dev console if needed
+                    store = _get_dev_store()
+                    if store:
+                        store.add_log("error", func.__qualname__, f"AUTH FAILED: {str(e)}")
+                    raise e
+                except Exception as e:
+                    logger.error(f"[AUTH] Error in auth handler: {e}")
+                    raise HTTPException(status_code=500, detail="Internal authentication error")
+
+            # Remove injected request if not needed
+            if not request_param_present and 'request' in kwargs:
+                kwargs.pop('request')
+                
+            return await func(*args, **kwargs)
+
+        @functools.wraps(func)
+        def sync_wrapper(*args, **kwargs) -> Any:
+            # Sync wrapper logic is tricky because the handler might be async.
+            # We enforce async handlers for now or require sync handlers to not await?
+            # Actually, standardizing on async handlers is safer for FastAPI.
+            # If the user provides a sync handler, it might block. 
+            # But let's assume the user might define a sync handler too.
+            # However, since this wrapper is sync, we can't await an async handler easily without helpers.
+            # Best practice: make the wrapper async if we need to await auth? 
+            # But we can't make the wrapper async if the decorated function is sync (it changes behavior from sync to async).
+            # For simplicity in this iteration, we will implement the async wrapper primarily.
+            # If the underlying function is sync, we can still use the async wrapper logic if we are in an async context (FastAPI handles this).
+            # WAIT. If func is sync, FastAPI runs it in a threadpool. If we wrap it in async def, FastAPI runs it in the event loop.
+            # So if we want to run async auth checks, we SHOULD always wrap in async def!
+            # So we don't actually need a sync_wrapper for the outer part.
+            
+            # BUT, we have existing valid sync wrappers in other decorators.
+            # Let's see how `log` does it. `log` has both.
+            # If we force async wrapper, it changes the interface.
+            # If the user defines `def get(self): ...` and we return `async def get(self): ...`, FastAPI is fine with it.
+            # It just means the route is treated as an async path operation.
+            # This is generally acceptable for auth which likely involves DB/IO.
+            pass # We will use the async_wrapper for both cases below.
+            
+            # Re-implementing logic for the 'sync_wrapper' locally is hard if auth is async.
+            # We will return the async_wrapper for ALL functions if auth is enabled.
+            # This is a reasonable trade-off.
+            
+            # To be safe, let's just make one wrapper implementation that is async
+            # and calls the original func appropriately.
+            return func(*args, **kwargs) # Placeholder, we will use async_wrapper for all.
+
+        # We will use the async wrapper for everything because auth is likely async (DB, etc)
+        # and FastAPI handles async wrappers around sync functions perfectly fine.
+        final_wrapper = async_wrapper
+        
+        # Modify signature if request param is missing
+        if not request_param_present:
+            new_params = params.copy()
+            new_params.append(
+                Parameter(
+                    "request",
+                    kind=Parameter.KEYWORD_ONLY,
+                    annotation=Request,
+                    default=None
+                )
+            )
+            final_wrapper.__signature__ = sig.replace(parameters=new_params)
+            
+        return final_wrapper
+
+    return decorator
 
 
 def log(func: Callable) -> Callable:

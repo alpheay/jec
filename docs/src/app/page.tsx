@@ -44,22 +44,6 @@ export default function Home() {
               Clean, intuitive, and powerful routing for modern Python APIs.
             </p>
 
-            {/* Alternate names */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground/60">
-              <span className="flex items-center gap-1.5">
-                <span className="h-1 w-1 rounded-full bg-accent-green"></span>
-                Jolly Enough Curses
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-1 w-1 rounded-full bg-accent-yellow"></span>
-                Jupiter Eats Comets
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-1 w-1 rounded-full bg-accent-violet"></span>
-                Just Encapsulated Controllers
-              </span>
-            </div>
-
             {/* CTA Buttons */}
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Button asChild size="lg" className="gap-2 bg-accent-blue hover:bg-accent-blue/90 text-white">
