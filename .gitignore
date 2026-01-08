@@ -29,3 +29,9 @@ htmlcov/
 Thumbs.db
 .env
 /versions
+
+# Next.js
+docs/.next/
+docs/out/
+docs/node_modules/
+
