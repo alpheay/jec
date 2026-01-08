@@ -28,3 +28,4 @@ htmlcov/
 .DS_Store
 Thumbs.db
 .env
+/versions
