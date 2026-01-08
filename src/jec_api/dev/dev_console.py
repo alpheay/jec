@@ -3,6 +3,7 @@
 import time
 import json
 import asyncio
+import inspect
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field, asdict
@@ -11,6 +12,9 @@ from threading import Lock
 
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import HTMLResponse, StreamingResponse
+
+# Lazy import to avoid circular dependency
+# from .dev_endpoint_tester import get_tester_html, extract_endpoint_schema
 
 
 @dataclass
@@ -192,15 +196,54 @@ def get_store() -> DevConsoleStore:
     return _store
 
 
-def create_dev_router(base_path: str = "/__dev__") -> APIRouter:
+def create_dev_router(base_path: str = "/__dev__", app_instance: Any = None) -> APIRouter:
     """Create the dev console API router."""
     router = APIRouter(prefix=base_path, tags=["Dev Console"])
     
     @router.get("/", response_class=HTMLResponse)
     async def dev_console_ui():
         """Serve the dev console HTML UI."""
-        return _get_console_html(base_path)
+        from .dev_endpoint_tester import get_tester_html
+        
+        # Get tester HTML components
+        tester_html, tester_css, tester_js = get_tester_html()
+        
+        return _get_console_html(base_path, tester_html, tester_css, tester_js)
     
+    @router.get("/api/endpoints")
+    async def get_endpoints():
+        """Get list of available endpoints with schema information."""
+        if not app_instance:
+            return []
+            
+        from .dev_endpoint_tester import extract_endpoint_schema
+        
+        endpoints = []
+        registered_routes = app_instance.get_registered_routes()
+        
+        for route_class in registered_routes:
+            base_route_path = route_class.get_path()
+            for http_method, sub_path, method_func, req_type, resp_type in route_class.get_endpoints():
+                # Build proper full path
+                if sub_path == "/":
+                    full_path = base_route_path
+                else:
+                    full_path = base_route_path.rstrip("/") + sub_path
+                
+                # Extract schema info
+                input_schema = extract_endpoint_schema(req_type) if req_type else None
+                output_schema = extract_endpoint_schema(resp_type) if resp_type else None
+                
+                endpoints.append({
+                    "method": http_method,
+                    "path": full_path,
+                    "function": method_func.__name__,
+                    "input_schema": input_schema,
+                    "output_schema": output_schema
+                })
+        
+        return endpoints
+
     @router.get("/api/all")
     async def get_all_data():
         """Get all stored metrics data."""
@@ -266,7 +309,7 @@ def create_dev_router(base_path: str = "/__dev__") -> APIRouter:
     return router
 
 
-def _get_console_html(base_path: str) -> str:
+def _get_console_html(base_path: str, tester_html: str = "", tester_css: str = "", tester_js: str = "") -> str:
     """Generate the dev console HTML with embedded CSS/JS."""
     return f'''<!DOCTYPE html>
 <html lang="en">
@@ -786,6 +829,7 @@ def _get_console_html(base_path: str) -> str:
         ::-webkit-scrollbar-thumb:hover {{ background: var(--border-light); }}
         
         .icon {{ width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }}
+        {tester_css}
     </style>
 </head>
 <body>
@@ -799,7 +843,10 @@ def _get_console_html(base_path: str) -> str:
                 <span class="status-dot" id="status-dot"></span>
                 <span id="status-text">Connected</span>
             </div>
-            <button class="btn btn-danger" onclick="clearData()">Clear</button>
+            <div class="header-actions-right">
+                <button class="btn" id="toggle-tester" onclick="toggleTester()">Tester</button>
+                <button class="btn btn-danger" onclick="clearData()">Clear</button>
+            </div>
         </div>
     </header>
     
@@ -853,6 +900,11 @@ def _get_console_html(base_path: str) -> str:
                 </div>
                 <div class="panel-content" id="version-list"></div>
             </div>
+        </div>
+        </div>
+        
+        <div class="tester-overlay" id="tester-overlay">
+            {tester_html}
         </div>
     </main>
     
@@ -1072,6 +1124,25 @@ def _get_console_html(base_path: str) -> str:
         }}
         
         connect();
+        
+        {tester_js}
+        
+        // Tester toggle logic
+        const testerOverlay = document.getElementById('tester-overlay');
+        const toggleTesterBtn = document.getElementById('toggle-tester');
+        let isTesterOpen = false;
+        
+        function toggleTester() {{
+            isTesterOpen = !isTesterOpen;
+            if (isTesterOpen) {{
+                testerOverlay.classList.add('visible');
+                toggleTesterBtn.classList.add('active');
+                if (typeof loadEndpoints === 'function') loadEndpoints();
+            }} else {{
+                testerOverlay.classList.remove('visible');
+                toggleTesterBtn.classList.remove('active');
+            }}
+        }}
     </script>
 </body>
 </html>'''

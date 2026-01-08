@@ -201,7 +201,7 @@ class Core(FastAPI):
             return response
         
         # Mount the dev console router
-        dev_router = create_dev_router(self._dev_path)
+        dev_router = create_dev_router(self._dev_path, app_instance=self)
         self.include_router(dev_router)
 
     def run(self):
