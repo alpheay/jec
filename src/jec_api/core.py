@@ -171,7 +171,7 @@ class Core(FastAPI):
     
     def _setup_dev_console(self):
         """Set up the dev console middleware and routes."""
-        from .dev_console import create_dev_router, get_store
+        from .dev.dev_console import create_dev_router, get_store
         
         # Add request tracking middleware
         @self.middleware("http")

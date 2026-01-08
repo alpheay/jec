@@ -28,16 +28,23 @@ class Health(Route):
     async def get(self):
         return {"status": "ok"}
 
+class Test(Route):
+    """Test endpoint."""
+    path = "/test"
+    
+    async def get(self):
+        return {"status": "ok"}
 
 # Create the application
 core = Core(title="Dev Console Demo", version="1.0.0")
 
 # Enable dev mode with configurable path
-core.tinker(dev=True, dev_path="/__dev__", port=8000)
+core.tinker(dev=True, dev_path="/__dev__", port=8000, strict_versioning=True)
 
 # Register routes
 core.register(Users)
 core.register(Health)
+core.register(Test)
 
 if __name__ == "__main__":
     core.run()

@@ -933,6 +933,16 @@ def _get_console_html(base_path: str) -> str:
                 return;
             }}
             
+            // Check if this request has any associated data
+            const data = getRequestData(requestId);
+            const hasData = data.logs.length > 0 || data.speed.length > 0 || data.versions.length > 0;
+            
+            if (!hasData) {{
+                // No data - close sidebar if open and deselect
+                closeSidebar();
+                return;
+            }}
+            
             selectedRequestId = requestId;
             renderRequests();
             updateSidebar();

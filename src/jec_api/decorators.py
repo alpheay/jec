@@ -16,7 +16,7 @@ logger = logging.getLogger("jec_api")
 def _get_dev_store():
     """Get the DevConsoleStore if dev mode is active."""
     try:
-        from .dev_console import get_store
+        from .dev.dev_console import get_store
         return get_store()
     except ImportError:
         return None
@@ -179,7 +179,21 @@ def version(constraint: str) -> Callable:
     if not re.match(r'^\d+(\.\d+)*', required_version):
         raise ValueError(f"Invalid version format: {required_version}")
     
+    import inspect
+    from inspect import Parameter
+
     def decorator(func: Callable) -> Callable:
+        # Inspect the original function signature
+        sig = inspect.signature(func)
+        params = list(sig.parameters.values())
+        
+        # Check if 'request' is already in parameters
+        request_param_present = False
+        for param in params:
+            if param.name == "request" or param.annotation == Request:
+                request_param_present = True
+                break
+        
         @functools.wraps(func)
         async def async_wrapper(*args, **kwargs) -> Any:
             # Try to find Request in kwargs or args
@@ -192,6 +206,11 @@ def version(constraint: str) -> Callable:
                 strict_versioning = getattr(request.app, "strict_versioning", False)
                 
                 if not client_version and strict_versioning:
+                    # Log failure to dev console
+                    store = _get_dev_store()
+                    if store:
+                        store.add_version_check(func.__qualname__, constraint, "MISSING", False)
+                        
                     return JSONResponse(
                         status_code=400,
                         content={
@@ -220,6 +239,10 @@ def version(constraint: str) -> Callable:
                             }
                         )
             
+            # If we injected request but the original function doesn't want it, remove it
+            if not request_param_present and 'request' in kwargs:
+                kwargs.pop('request')
+                
             return await func(*args, **kwargs)
         
         @functools.wraps(func)
@@ -233,6 +256,11 @@ def version(constraint: str) -> Callable:
                 strict_versioning = getattr(request.app, "strict_versioning", False)
                 
                 if not client_version and strict_versioning:
+                    # Log failure to dev console
+                    store = _get_dev_store()
+                    if store:
+                        store.add_version_check(func.__qualname__, constraint, "MISSING", False)
+                        
                     return JSONResponse(
                         status_code=400,
                         content={
@@ -261,11 +289,29 @@ def version(constraint: str) -> Callable:
                             }
                         )
             
+            # If we injected request but the original function doesn't want it, remove it
+            if not request_param_present and 'request' in kwargs:
+                kwargs.pop('request')
+
             return func(*args, **kwargs)
         
         # Store version info on the function for introspection
         wrapper = async_wrapper if _is_async(func) else sync_wrapper
         wrapper._version_constraint = constraint
+        
+        # Modify signature if request param is missing
+        if not request_param_present:
+            new_params = params.copy()
+            new_params.append(
+                Parameter(
+                    "request",
+                    kind=Parameter.KEYWORD_ONLY,
+                    annotation=Request,
+                    default=None
+                )
+            )
+            wrapper.__signature__ = sig.replace(parameters=new_params)
+            
         return wrapper
     
     return decorator
