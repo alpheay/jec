@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from jec_api.route import Route
-from jec_api.router import Core
+from jec_api.core import Core
 
 # --- Data Models ---
 class UserRequest(BaseModel):
