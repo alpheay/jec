@@ -28,7 +28,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   /* Sidebar colors */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -38,7 +38,7 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  
+
   /* JEC Accent Colors */
   --color-accent-green: var(--accent-green);
   --color-accent-emerald: var(--accent-emerald);
@@ -48,21 +48,21 @@
   --color-accent-blue: var(--accent-blue);
   --color-accent-violet: var(--accent-violet);
   --color-accent-slate: var(--accent-slate);
-  
+
   /* Chart colors */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  
+
   /* Radius scale */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-  
+
   /* Typography */
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
@@ -71,35 +71,43 @@
 /* Dark theme (default for docs - matches dev console) */
 :root {
   --radius: 0.5rem;
-  
+
   /* Background hierarchy from dev console */
-  --background: #09090b;        /* bg-primary */
-  --foreground: #fafafa;        /* text-primary */
-  
-  --card: #18181b;              /* bg-card */
+  --background: #09090b;
+  /* bg-primary */
+  --foreground: #fafafa;
+  /* text-primary */
+
+  --card: #18181b;
+  /* bg-card */
   --card-foreground: #fafafa;
-  
-  --popover: #1f1f23;           /* bg-elevated */
+
+  --popover: #1f1f23;
+  /* bg-elevated */
   --popover-foreground: #fafafa;
-  
+
   --primary: #fafafa;
   --primary-foreground: #09090b;
-  
-  --secondary: #27272a;         /* bg-hover */
+
+  --secondary: #27272a;
+  /* bg-hover */
   --secondary-foreground: #fafafa;
-  
+
   --muted: #27272a;
-  --muted-foreground: #a1a1aa;  /* text-secondary */
-  
+  --muted-foreground: #a1a1aa;
+  /* text-secondary */
+
   --accent: #27272a;
   --accent-foreground: #fafafa;
-  
-  --destructive: #ef4444;       /* accent-red */
-  
+
+  --destructive: #ef4444;
+  /* accent-red */
+
   --border: #27272a;
   --input: #27272a;
-  --ring: #3f3f46;              /* border-light */
-  
+  --ring: #3f3f46;
+  /* border-light */
+
   /* JEC Accent Colors from dev console */
   --accent-green: #22c55e;
   --accent-emerald: #10b981;
@@ -109,16 +117,17 @@
   --accent-blue: #3b82f6;
   --accent-violet: #8b5cf6;
   --accent-slate: #64748b;
-  
+
   /* Chart colors */
   --chart-1: #3b82f6;
   --chart-2: #22c55e;
   --chart-3: #eab308;
   --chart-4: #8b5cf6;
   --chart-5: #ef4444;
-  
+
   /* Sidebar */
-  --sidebar: #0f0f12;           /* bg-secondary */
+  --sidebar: #0f0f12;
+  /* bg-secondary */
   --sidebar-foreground: #fafafa;
   --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #fafafa;
@@ -132,31 +141,31 @@
 .light {
   --background: #fafafa;
   --foreground: #09090b;
-  
+
   --card: #ffffff;
   --card-foreground: #09090b;
-  
+
   --popover: #ffffff;
   --popover-foreground: #09090b;
-  
+
   --primary: #09090b;
   --primary-foreground: #fafafa;
-  
+
   --secondary: #f4f4f5;
   --secondary-foreground: #09090b;
-  
+
   --muted: #f4f4f5;
   --muted-foreground: #71717a;
-  
+
   --accent: #f4f4f5;
   --accent-foreground: #09090b;
-  
+
   --destructive: #ef4444;
-  
+
   --border: #e4e4e7;
   --input: #e4e4e7;
   --ring: #a1a1aa;
-  
+
   --sidebar: #f4f4f5;
   --sidebar-foreground: #09090b;
   --sidebar-primary: #3b82f6;
@@ -171,37 +180,37 @@
   * {
     @apply border-border outline-ring/50;
   }
-  
+
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  
+
   /* Selection styling */
   ::selection {
     background-color: rgba(59, 130, 246, 0.3);
   }
-  
+
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
   }
-  
+
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
-  
+
   ::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   ::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 3px;
   }
-  
+
   ::-webkit-scrollbar-thumb:hover {
     background: var(--ring);
   }
@@ -227,13 +236,23 @@
 }
 
 @keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* Code block styling */
@@ -246,11 +265,19 @@ code[class*="language-"] {
 }
 
 pre[class*="language-"] {
-  padding: 1rem 1.25rem;
+  padding: 1.5rem;
   border-radius: 0.5rem;
   background: #0f0f12 !important;
   border: 1px solid var(--border);
   overflow-x: auto;
+}
+
+/* Remove default pre styling when inside CodeBlock component */
+.code-block-wrapper pre[class*="language-"] {
+  padding: 1.5rem;
+  border-radius: 0;
+  border: none;
+  background: transparent !important;
 }
 
 code[class*="language-"] {
@@ -258,7 +285,7 @@ code[class*="language-"] {
 }
 
 /* Inline code */
-:not(pre) > code {
+:not(pre)>code {
   background: var(--secondary);
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
