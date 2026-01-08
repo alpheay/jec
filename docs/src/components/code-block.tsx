@@ -47,25 +47,32 @@ export function CodeBlock({
     const lines = code.split("\n");
 
     return (
-        <div className={cn("group relative rounded-lg overflow-hidden", className)}>
-            {/* Header */}
-            {filename && (
-                <div className="flex items-center justify-between bg-[#1f1f23] border-b border-border px-4 py-2">
-                    <span className="text-xs font-medium text-muted-foreground font-mono">
+        <div
+            className={cn(
+                "code-block-wrapper group relative rounded-xl border border-border bg-card/80 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/20",
+                className
+            )}
+        >
+            {/* Window Header */}
+            <div className="flex items-center gap-2 border-b border-border bg-[#1f1f23] px-4 py-3">
+                {/* macOS-style window dots */}
+                <div className="flex gap-1.5">
+                    <div className="h-3 w-3 rounded-full bg-accent-red/80"></div>
+                    <div className="h-3 w-3 rounded-full bg-accent-yellow/80"></div>
+                    <div className="h-3 w-3 rounded-full bg-accent-green/80"></div>
+                </div>
+                {filename && (
+                    <span className="ml-2 text-xs text-muted-foreground font-mono">
                         {filename}
                     </span>
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
-                        {language}
-                    </span>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Copy button */}
             <button
                 onClick={handleCopy}
                 className={cn(
-                    "absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-md border transition-all",
-                    filename && "top-12",
+                    "absolute right-3 top-14 z-10 flex h-8 w-8 items-center justify-center rounded-md border transition-all",
                     copied
                         ? "border-accent-green/50 bg-accent-green/10 text-accent-green"
                         : "border-border bg-[#1f1f23] text-muted-foreground opacity-0 group-hover:opacity-100 hover:border-border hover:bg-[#27272a] hover:text-foreground"
@@ -80,13 +87,13 @@ export function CodeBlock({
             </button>
 
             {/* Code */}
-            <div className="relative overflow-x-auto">
+            <div className="relative overflow-x-auto bg-[#0f0f12]">
                 {showLineNumbers && (
-                    <div className="absolute left-0 top-0 flex flex-col py-4 pl-4 pr-3 text-right select-none border-r border-border bg-[#0a0a0c]">
+                    <div className="absolute left-0 top-0 flex flex-col py-6 pl-4 pr-3 text-right select-none border-r border-border">
                         {lines.map((_, i) => (
                             <span
                                 key={i}
-                                className="text-xs leading-[1.7rem] text-muted-foreground/40 font-mono"
+                                className="text-sm leading-relaxed text-muted-foreground/40 font-mono"
                             >
                                 {i + 1}
                             </span>
@@ -95,7 +102,7 @@ export function CodeBlock({
                 )}
                 <pre
                     className={cn(
-                        `language-${language}`,
+                        "p-6 text-sm leading-relaxed overflow-x-auto font-mono",
                         showLineNumbers && "pl-14"
                     )}
                 >

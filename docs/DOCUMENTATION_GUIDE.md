@@ -86,7 +86,12 @@ const navigation: NavSection[] = [
 
 ## Using Code Blocks
 
-The `CodeBlock` component provides syntax highlighting with copy functionality.
+The `CodeBlock` component provides syntax highlighting with a premium macOS-style window design featuring:
+
+- **Window header** with colored traffic light dots (red, yellow, green)
+- **Glassmorphism effects** with backdrop blur and shadow
+- **Copy functionality** that appears on hover
+- **Prism.js syntax highlighting** for clean, consistent code display
 
 ### Basic Usage
 
