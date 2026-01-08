@@ -1,5 +1,7 @@
 
 import { CodeBlock } from "@/components/code-block";
+import Link from "next/link";
+
 
 export default function VersioningPage() {
     return (
@@ -38,7 +40,7 @@ class Api(Route):
 
                 <div className="mt-8 p-4 rounded-lg bg-card border border-border">
                     <p className="text-muted-foreground">
-                        Need strict version enforcement, deprecation headers, or sunset dates? Check the <a href="/docs/decorators/versioning/advanced" className="text-accent-blue hover:text-accent-blue/80 transition-colors">Advanced Usage</a> guide.
+                        Need strict version enforcement, deprecation headers, or sunset dates? Check the <Link href="/docs/decorators/versioning/advanced" className="text-accent-blue hover:text-accent-blue/80 transition-colors">Advanced Usage</Link> guide.
                     </p>
                 </div>
             </section>

@@ -1,4 +1,6 @@
 import { CodeBlock } from "@/components/code-block";
+import Link from "next/link";
+
 
 export default function LoggingPage() {
     return (
@@ -33,7 +35,7 @@ class Users(Route):
 
                 <div className="mt-8 p-4 rounded-lg bg-card border border-border">
                     <p className="text-muted-foreground">
-                        Need more control over log levels, truncation, or privacy? Check the <a href="/docs/decorators/logging/advanced" className="text-accent-blue hover:text-accent-blue/80 transition-colors">Advanced Usage</a> guide.
+                        Need more control over log levels, truncation, or privacy? Check the <Link href="/docs/decorators/logging/advanced" className="text-accent-blue hover:text-accent-blue/80 transition-colors">Advanced Usage</Link> guide.
                     </p>
                 </div>
             </section>

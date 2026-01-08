@@ -1,4 +1,6 @@
 import { CodeBlock } from "@/components/code-block";
+import Link from "next/link";
+
 
 export default function DecoratorsPage() {
     return (
@@ -20,7 +22,7 @@ export default function DecoratorsPage() {
                 </p>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                    <a
+                    <Link
                         href="/docs/decorators/logging"
                         className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
                     >
@@ -30,9 +32,9 @@ export default function DecoratorsPage() {
                         <p className="text-sm text-muted-foreground">
                             Automatic request/response logging for debugging and auditing.
                         </p>
-                    </a>
+                    </Link>
 
-                    <a
+                    <Link
                         href="/docs/decorators/speed"
                         className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
                     >
@@ -42,9 +44,9 @@ export default function DecoratorsPage() {
                         <p className="text-sm text-muted-foreground">
                             Performance monitoring and execution time tracking.
                         </p>
-                    </a>
+                    </Link>
 
-                    <a
+                    <Link
                         href="/docs/decorators/authentication"
                         className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
                     >
@@ -54,9 +56,9 @@ export default function DecoratorsPage() {
                         <p className="text-sm text-muted-foreground">
                             Role-based access control and request authentication.
                         </p>
-                    </a>
+                    </Link>
 
-                    <a
+                    <Link
                         href="/docs/decorators/versioning"
                         className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
                     >
@@ -66,9 +68,9 @@ export default function DecoratorsPage() {
                         <p className="text-sm text-muted-foreground">
                             Semantic versioning enforcement for evolving APIs.
                         </p>
-                    </a>
+                    </Link>
 
-                    <a
+                    <Link
                         href="/docs/decorators/deprecated"
                         className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
                     >
@@ -78,9 +80,9 @@ export default function DecoratorsPage() {
                         <p className="text-sm text-muted-foreground">
                             Mark endpoints for deprecation with sunset dates and alternatives.
                         </p>
-                    </a>
+                    </Link>
 
-                    <a
+                    <Link
                         href="/docs/decorators/ratelimit"
                         className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
                     >
@@ -90,9 +92,9 @@ export default function DecoratorsPage() {
                         <p className="text-sm text-muted-foreground">
                             Prevent abuse by limiting request frequency.
                         </p>
-                    </a>
+                    </Link>
 
-                    <a
+                    <Link
                         href="/docs/decorators/timeout"
                         className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
                     >
@@ -102,9 +104,9 @@ export default function DecoratorsPage() {
                         <p className="text-sm text-muted-foreground">
                             Enforce execution time limits and cancel slow tasks.
                         </p>
-                    </a>
+                    </Link>
 
-                    <a
+                    <Link
                         href="/docs/decorators/retry"
                         className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
                     >
@@ -114,7 +116,7 @@ export default function DecoratorsPage() {
                         <p className="text-sm text-muted-foreground">
                             Improve resilience with automatic retries and backoff.
                         </p>
-                    </a>
+                    </Link>
                 </div>
             </section>
         </article>

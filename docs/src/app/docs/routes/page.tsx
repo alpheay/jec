@@ -1,4 +1,6 @@
 import { CodeBlock } from "@/components/code-block";
+import Link from "next/link";
+
 
 export default function RoutesPage() {
     return (
@@ -88,7 +90,7 @@ class MyRoute(Route):
                     JEC uses Pydantic models for robust validation and serialization.
                 </p>
                 <div className="flex">
-                    <a
+                    <Link
                         href="/docs/routes/types"
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-accent-blue/10 text-accent-blue font-medium hover:bg-accent-blue/20 transition-colors"
                     >
@@ -96,7 +98,7 @@ class MyRoute(Route):
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                    </a>
+                    </Link>
                 </div>
             </section>
         </article>
