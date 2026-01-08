@@ -53,7 +53,8 @@ class Core(FastAPI):
             router_kwargs["tags"] = [route_class.__name__]
         
         # Register each endpoint
-        for http_method, sub_path, method_func in endpoints:
+        # Endpoint tuple: (http_method, sub_path, method_func, request_body_type, response_model)
+        for http_method, sub_path, method_func, request_body_type, response_model in endpoints:
             # Build full path
             if sub_path == "/":
                 full_path = base_path
@@ -66,10 +67,19 @@ class Core(FastAPI):
             # Get the appropriate router method (get, post, etc.)
             router_method = getattr(self, http_method.lower())
             
+            # Build route kwargs
+            route_kwargs = dict(router_kwargs)
+            
+            # Add response_model if defined
+            if response_model is not None:
+                route_kwargs["response_model"] = response_model
+            
             # Register the route
+            # Note: request_body_type is automatically handled by FastAPI
+            # through the method's parameter type hints
             router_method(
                 full_path,
-                **router_kwargs,
+                **route_kwargs,
             )(bound_method)
         
         self._registered_routes.append(route_class)

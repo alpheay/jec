@@ -2,10 +2,10 @@
 
 ## Features
 
-- **Class-Based Routes**: Group related endpoints (e.g., CRUD operations) into a single class.
-- **Auto-Discovery**: Automatically find and register route classes from your project packages.
-- **Smart Method Naming**: API paths and HTTP methods are inferred from your method names (e.g., `get_by_id` becomes `GET /{id}`).
-- **FastAPI Native**: Fully compatible with FastAPI dependencies, models, and OpenAPI generation.
+- **Class-Based Routes**: Group related endpoints into a single class.
+- **Strict Method Mapping**: Methods named `get`, `post`, `put`, `delete`, `patch`, `options`, or `head` are automatically mapped to their respective HTTP verbs.
+- **Data Object Support**: Built-in support for **Pydantic models**. Type hints are automatically used for request body validation and response model registry.
+- **FastAPI Native**: Fully compatible with FastAPI dependencies and OpenAPI generation.
 
 ## Installation
 
@@ -19,23 +19,34 @@ pip install jec-api
 
 ```python
 # routes.py
+from pydantic import BaseModel
 from jec_api import Route
 
+class UserResponse(BaseModel):
+    id: int
+    name: str
+
+class CreateUser(BaseModel):
+    name: str
+
 class Users(Route):
-    # Optional: explicitly set path, otherwise defaults to /users
-    # path = "/my-users"
-
-    async def get(self):
+    # Strictly mapped to GET /users
+    async def get(self) -> list[UserResponse]:
         """List all users"""
-        return [{"id": 1, "name": "Alice"}]
+        return [UserResponse(id=1, name="Alice")]
 
-    async def get_by_id(self, id: int):
-        """Get user by ID"""
-        return {"id": id, "name": "Alice"}
-
-    async def post(self, name: str):
+    # Strictly mapped to POST /users
+    async def post(self, data: CreateUser) -> UserResponse:
         """Create a user"""
-        return {"id": 2, "name": name}
+        return UserResponse(id=2, name=data.name)
+
+class UserDetail(Route):
+    # Custom path with parameter
+    path = "/users/{user_id}"
+
+    async def get(self, user_id: int) -> UserResponse:
+        """Get user by ID"""
+        return UserResponse(id=user_id, name="Alice")
 ```
 
 2. **Create the App**
@@ -66,23 +77,47 @@ uvicorn main:core --reload
 
 Inherit from `jec_api.Route` to create a route group. The class name is automatically converted to kebab-case to form the base path (e.g., `UserProfiles` -> `/user-profiles`), unless you override it with the `path` attribute.
 
-### Method Naming Convention
+### Method Mapping
 
-JEC-API parses your method names to determine the HTTP verb and path parameters:
+JEC-API maps methods to HTTP verbs based on their exact names:
 
-| Method Name | HTTP Verb | Generated Path |
-|-------------|-----------|----------------|
-| `get()` | GET | `/` |
-| `post()` | POST | `/` |
-| `get_by_id(id)` | GET | `/{id}` |
-| `delete_by_id(id)` | DELETE | `/{id}` |
-| `get_users()` | GET | `/users` |
-| `post_batch_update()` | POST | `/batch-update` |
+| Method Name | HTTP Verb | Path |
+|-------------|-----------|------|
+| `get()`     | GET       | `/`  |
+| `post()`    | POST      | `/`  |
+| `put()`     | PUT       | `/`  |
+| `delete()`  | DELETE    | `/`  |
+| `patch()`   | PATCH     | `/`  |
+| `options()` | OPTIONS   | `/`  |
+| `head()`    | HEAD      | `/`  |
+
+> **Note**: Methods with other names (e.g., `get_users`, `helper_method`) are ignored and will not be registered as API endpoints.
 
 ### Path Parameters
 
-To define path parameters, use the `_by_{param}` pattern in your method name.
-For example, `get_by_user_id` will generate a path `/{user_id}`.
+To define routes with path parameters, override the `path` attribute on the `Route` class.
+
+```python
+class Users(Route):
+    path = "/users/{id}"
+    
+    async def get(self, id: int):
+        return {"id": id}
+```
+
+### Data Validation and Objects
+
+JEC-API leverages Pydantic for data validation and schema generation.
+
+1.  **Request Body**: The type hint of the first non-`self` parameter is used as the request body.
+2.  **Response Model**: The return type hint is used as the `response_model` for the OpenAPI schema and serialization.
+
+```python
+class Users(Route):
+    async def post(self, data: UserSchema) -> UserResponse:
+        # data is automatically validated and parsed
+        return UserResponse(...)
+```
 
 ### Manual Registration
 
