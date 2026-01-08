@@ -32,7 +32,7 @@ class SecureData(Route):
         return {"data": "secure"}
 
     @auth(False) # Public endpoint
-    async def get_public(self):
+    async def post(self):
         return {"data": "public"}`}
                 />
 
