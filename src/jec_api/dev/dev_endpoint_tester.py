@@ -770,13 +770,21 @@ def get_tester_html() -> tuple[str, str, str]:
     let headersExpanded = false;
     let requestHeaders = [];
     
-    const defaultHeaders = [
-        { key: 'Content-Type', value: 'application/json' },
-        { key: 'Accept', value: 'application/json' }
-    ];
-    
     function initHeaders() {
-        requestHeaders = [...defaultHeaders];
+        requestHeaders = [];
+        
+        // Add Content-Type for methods that typically have a body
+        if (selectedEndpoint && ['POST', 'PUT', 'PATCH'].includes(selectedEndpoint.method)) {
+            requestHeaders.push({ key: 'Content-Type', value: 'application/json' });
+        }
+        
+        // Add required headers from endpoint metadata
+        if (selectedEndpoint && selectedEndpoint.required_headers) {
+            for (const h of selectedEndpoint.required_headers) {
+                requestHeaders.push({ key: h.key, value: h.value });
+            }
+        }
+        
         renderHeaders();
     }
     

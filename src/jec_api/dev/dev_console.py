@@ -234,12 +234,25 @@ def create_dev_router(base_path: str = "/__dev__", app_instance: Any = None) -> 
                 input_schema = extract_endpoint_schema(req_type) if req_type else None
                 output_schema = extract_endpoint_schema(resp_type) if resp_type else None
                 
+                # Detect required headers from decorators
+                required_headers = []
+                
+                # Check for @version decorator
+                version_constraint = getattr(method_func, '_version_constraint', None)
+                if version_constraint:
+                    required_headers.append({
+                        'key': 'X-API-Version',
+                        'value': '1.0.0',
+                        'hint': f'Required: {version_constraint}'
+                    })
+                
                 endpoints.append({
                     "method": http_method,
                     "path": full_path,
                     "function": method_func.__name__,
                     "input_schema": input_schema,
-                    "output_schema": output_schema
+                    "output_schema": output_schema,
+                    "required_headers": required_headers
                 })
         
         return endpoints
