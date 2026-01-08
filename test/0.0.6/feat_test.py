@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 from fastapi import Request
-from jec_api.decorators import version
+from jec_api import version
 
 # Case 1: Function WITHOUT request param
 @version(">=1.0.0")

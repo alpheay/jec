@@ -2,8 +2,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import Request, HTTPException
-from jec_api import Core, Route
-from jec_api.decorators import auth
+from jec_api import Core, Route, auth
 
 # --- Auth Handler Mock ---
 async def mock_auth_handler(request: Request, roles: list[str] = None) -> bool:

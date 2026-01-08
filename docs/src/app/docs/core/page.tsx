@@ -32,45 +32,22 @@ app = Core(
             </section>
 
             <section className="mb-12">
-                <h2 className="text-2xl font-semibold text-foreground mb-4">Configuration via <code>tinker()</code></h2>
+                <h2 className="text-2xl font-semibold text-foreground mb-4">Configuration</h2>
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                    The <code>tinker</code> method provides a unified interface for configuring both application settings and the underlying Uvicorn server server.
+                    Configure your application settings, developer tools, and underlying server options.
                 </p>
 
-                <h3 className="text-xl font-medium text-foreground mb-3">Dev Mode</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                    Enable the developer console to inspect requests, performance, and logs in real-time.
-                </p>
-                <CodeBlock
-                    language="python"
-                    code={`app.tinker(
-    dev=True,           # Enable Dev Console
-    dev_path="/__dev__" # Custom path (default: /__dev__)
-)`}
-                />
-
-                <h3 className="text-xl font-medium text-foreground mb-3 mt-8">Strict Versioning</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                    Enforce the presence of the <code>X-API-Version</code> header on all versioned endpoints.
-                </p>
-                <CodeBlock
-                    language="python"
-                    code={`app.tinker(strict_versioning=True)`}
-                />
-
-                <h3 className="text-xl font-medium text-foreground mb-3 mt-8">Server Settings</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                    Pass any additional keyword arguments to configure Uvicorn directly.
-                </p>
-                <CodeBlock
-                    language="python"
-                    code={`app.tinker(
-    host="0.0.0.0",
-    port=8080,
-    workers=4,
-    loop="uvloop"
-)`}
-                />
+                <div className="flex">
+                    <a
+                        href="/docs/core/configuration"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-accent-blue/10 text-accent-blue font-medium hover:bg-accent-blue/20 transition-colors"
+                    >
+                        View Configuration Guide
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
             </section>
 
             <section className="mb-12">
@@ -109,6 +86,6 @@ app.discover("routes", recursive=True)`}
     app.run()`}
                 />
             </section>
-        </article>
+        </article >
     );
 }

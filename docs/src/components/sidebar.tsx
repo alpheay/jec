@@ -42,7 +42,14 @@ const navigation: NavSection[] = [
     {
         title: "Core Concepts",
         items: [
-            { title: "Core Application", href: "/docs/core", icon: <Cpu className="w-4 h-4" /> },
+            {
+                title: "Core Application",
+                href: "/docs/core",
+                icon: <Cpu className="w-4 h-4" />,
+                items: [
+                    { title: "Configuration", href: "/docs/core/configuration" }
+                ]
+            },
             {
                 title: "Routes",
                 href: "/docs/routes",
@@ -51,7 +58,15 @@ const navigation: NavSection[] = [
                     { title: "Types & Validation", href: "/docs/routes/types" }
                 ]
             },
-            { title: "Decorators", href: "/docs/decorators", icon: <Code2 className="w-4 h-4" /> },
+            {
+                title: "Decorators",
+                href: "/docs/decorators",
+                icon: <Code2 className="w-4 h-4" />,
+                items: [
+                    { title: "Authentication", href: "/docs/decorators/authentication" },
+                    { title: "Versioning", href: "/docs/decorators/versioning" }
+                ]
+            },
             { title: "Developer Tools", href: "/docs/dev-tools", icon: <Terminal className="w-4 h-4" /> },
         ],
     },
