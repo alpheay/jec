@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jec-api"
-version = "0.0.2.a"
+version = "0.0.3"
 description = "Beta version of JEC API"
 readme = "README.md"
 license = "MIT"
