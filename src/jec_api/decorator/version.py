@@ -3,7 +3,7 @@ import functools
 import re
 import logging
 import inspect
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 from inspect import Parameter
 
 from fastapi import Request
@@ -11,7 +11,16 @@ from fastapi.responses import JSONResponse
 
 from .utils import get_dev_store, find_request, check_version, is_async
 
-def version(constraint: str) -> Callable:
+logger = logging.getLogger("jec_api")
+
+
+def version(
+    constraint: str,
+    *,
+    deprecated: bool = False,
+    sunset: Optional[str] = None,
+    message: Optional[str] = None,
+) -> Callable:
     """
     Decorator that enforces API version constraints on an endpoint.
     
@@ -22,6 +31,9 @@ def version(constraint: str) -> Callable:
     
     Args:
         constraint: Version constraint string (e.g., ">=1.0.0", "<2.0.0", "==1.5.0")
+        deprecated: Mark endpoint as deprecated (adds Deprecation header). Default: False
+        sunset: Sunset date for deprecated endpoint (ISO 8601 format). Default: None
+        message: Custom deprecation/version message. Default: None
     
     Usage:
         class Users(Route):
@@ -29,9 +41,12 @@ def version(constraint: str) -> Callable:
             async def get(self):
                 return {"users": []}
             
-            @version(">=2.0.0")
+            @version(">=1.0.0", deprecated=True, sunset="2025-06-01")
+            async def get_old(self):
+                return {"users": [], "warning": "Use v2"}
+            
+            @version(">=2.0.0", message="Use v3 API for better performance")
             async def post(self, data: CreateUserRequest):
-                # Only available in API v2.0.0+
                 return {"created": True}
     """
     # Parse the constraint
@@ -57,6 +72,25 @@ def version(constraint: str) -> Callable:
             if param.name == "request" or param.annotation == Request:
                 request_param_present = True
                 break
+        
+        def _add_deprecation_headers(response: Any, request: Optional[Request] = None):
+            """Add deprecation headers if endpoint is deprecated."""
+            if not deprecated:
+                return
+            
+            # For JSONResponse or Response objects, add headers
+            if hasattr(response, 'headers'):
+                response.headers["Deprecation"] = "true"
+                if sunset:
+                    response.headers["Sunset"] = sunset
+                if message:
+                    response.headers["X-Deprecation-Message"] = message
+            
+            # Log deprecation warning
+            deprecation_msg = message or f"Endpoint {func.__qualname__} is deprecated"
+            if sunset:
+                deprecation_msg += f" (sunset: {sunset})"
+            logger.warning(f"[DEPRECATED] {deprecation_msg}")
         
         @functools.wraps(func)
         async def async_wrapper(*args, **kwargs) -> Any:
@@ -93,11 +127,12 @@ def version(constraint: str) -> Callable:
                         store.add_version_check(func.__qualname__, constraint, client_version, passed)
                     
                     if not passed:
+                        error_detail = message or f"This endpoint requires API version {constraint}"
                         return JSONResponse(
                             status_code=400,
                             content={
                                 "error": "API version incompatible",
-                                "detail": f"This endpoint requires API version {constraint}",
+                                "detail": error_detail,
                                 "your_version": client_version,
                                 "required": constraint
                             }
@@ -107,7 +142,9 @@ def version(constraint: str) -> Callable:
             if not request_param_present and 'request' in kwargs:
                 kwargs.pop('request')
                 
-            return await func(*args, **kwargs)
+            result = await func(*args, **kwargs)
+            _add_deprecation_headers(result, request)
+            return result
         
         @functools.wraps(func)
         def sync_wrapper(*args, **kwargs) -> Any:
@@ -143,11 +180,12 @@ def version(constraint: str) -> Callable:
                         store.add_version_check(func.__qualname__, constraint, client_version, passed)
                     
                     if not passed:
+                        error_detail = message or f"This endpoint requires API version {constraint}"
                         return JSONResponse(
                             status_code=400,
                             content={
                                 "error": "API version incompatible",
-                                "detail": f"This endpoint requires API version {constraint}",
+                                "detail": error_detail,
                                 "your_version": client_version,
                                 "required": constraint
                             }
@@ -157,11 +195,15 @@ def version(constraint: str) -> Callable:
             if not request_param_present and 'request' in kwargs:
                 kwargs.pop('request')
 
-            return func(*args, **kwargs)
+            result = func(*args, **kwargs)
+            _add_deprecation_headers(result, request)
+            return result
         
         # Store version info on the function for introspection
         wrapper = async_wrapper if is_async(func) else sync_wrapper
         wrapper._version_constraint = constraint
+        wrapper._deprecated = deprecated
+        wrapper._sunset = sunset
         
         # Modify signature if request param is missing
         if not request_param_present:

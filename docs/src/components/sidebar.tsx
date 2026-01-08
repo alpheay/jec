@@ -64,6 +64,8 @@ const navigation: NavSection[] = [
                 icon: <Code2 className="w-4 h-4" />,
                 items: [
                     { title: "Authentication", href: "/docs/decorators/authentication" },
+                    { title: "Logging", href: "/docs/decorators/logging" },
+                    { title: "Speed", href: "/docs/decorators/speed" },
                     { title: "Versioning", href: "/docs/decorators/versioning" }
                 ]
             },
