@@ -338,6 +338,15 @@ code[class*="language-"] {
   color: #8b5cf6;
 }
 
+/* Python decorators - match home page yellow */
+.token.decorator,
+.token.annotation,
+.language-python .token.decorator,
+.language-python .token.decorator .token.punctuation,
+.language-python .token.decorator .token.function {
+  color: #eab308 !important;
+}
+
 .token.function,
 .token.class-name {
   color: #3b82f6;
