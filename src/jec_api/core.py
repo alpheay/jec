@@ -1,7 +1,8 @@
 """Core - FastAPI wrapper with class-based route registration."""
 
+import time
 from typing import Any, Callable, List, Type, Optional
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.routing import APIRoute
 
 from .route import Route
@@ -23,6 +24,8 @@ class Core(FastAPI):
         self._registered_routes: List[Type[Route]] = []
         self._uvicorn_config: dict = {}
         self.strict_versioning: bool = False
+        self._dev_enabled: bool = False
+        self._dev_path: str = "/__dev__"
     
     def register(self, route_class: Type[Route], **router_kwargs) -> "Core":
         """
@@ -111,7 +114,6 @@ class Core(FastAPI):
             self.register(route_class, **router_kwargs)
         
         return self
-    
 
     def tinker(self, **kwargs) -> "Core":
         """
@@ -121,6 +123,8 @@ class Core(FastAPI):
             **kwargs: Configuration options.
                 - FastAPI attributes (title, description, etc.) update the app.
                 - strict_versioning: Enable strict API version enforcement (default: False).
+                - dev: Enable dev console for debugging (default: False).
+                - dev_path: Path for dev console (default: "/__dev__").
                 - All other kwargs are stored and passed to uvicorn.run().
         
         Returns:
@@ -129,6 +133,21 @@ class Core(FastAPI):
         # Handle strict_versioning specifically
         if "strict_versioning" in kwargs:
             self.strict_versioning = kwargs.pop("strict_versioning")
+        
+        # Handle dev mode
+        if "dev" in kwargs:
+            self._dev_enabled = kwargs.pop("dev")
+        
+        # Handle dev_path
+        if "dev_path" in kwargs:
+            self._dev_path = kwargs.pop("dev_path")
+            # Ensure path starts with /
+            if not self._dev_path.startswith("/"):
+                self._dev_path = "/" + self._dev_path
+        
+        # Enable dev console if dev mode is on
+        if self._dev_enabled:
+            self._setup_dev_console()
         
         # FastAPI attributes that can be updated
         app_attrs = {
@@ -149,6 +168,41 @@ class Core(FastAPI):
                 self._uvicorn_config[k] = v
         
         return self
+    
+    def _setup_dev_console(self):
+        """Set up the dev console middleware and routes."""
+        from .dev_console import create_dev_router, get_store
+        
+        # Add request tracking middleware
+        @self.middleware("http")
+        async def dev_request_tracker(request: Request, call_next):
+            # Skip dev console requests
+            if request.url.path.startswith(self._dev_path):
+                return await call_next(request)
+            
+            start_time = time.perf_counter()
+            
+            response = await call_next(request)
+            
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            
+            # Log the request
+            store = get_store()
+            store.add_request(
+                method=request.method,
+                path=request.url.path,
+                status_code=response.status_code,
+                duration_ms=duration_ms,
+                client_ip=request.client.host if request.client else "unknown",
+                headers=dict(request.headers),
+                query_params=dict(request.query_params)
+            )
+            
+            return response
+        
+        # Mount the dev console router
+        dev_router = create_dev_router(self._dev_path)
+        self.include_router(dev_router)
 
     def run(self):
         """
@@ -159,8 +213,16 @@ class Core(FastAPI):
         # Default to 127.0.0.1 if host not specified to match uvicorn CLI behavior
         if "host" not in config:
             config["host"] = "127.0.0.1"
+        
+        # Print dev console URL if enabled
+        if self._dev_enabled:
+            host = config.get("host", "127.0.0.1")
+            port = config.get("port", 8000)
+            print(f"\n✨ JEC DevTools available at: http://{host}:{port}{self._dev_path}/\n")
+        
         uvicorn.run(self, **config)
 
     def get_registered_routes(self) -> List[Type[Route]]:
         """Get a list of all registered Route classes."""
         return self._registered_routes.copy()
+

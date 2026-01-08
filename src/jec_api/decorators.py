@@ -13,6 +13,15 @@ from fastapi.responses import JSONResponse
 logger = logging.getLogger("jec_api")
 
 
+def _get_dev_store():
+    """Get the DevConsoleStore if dev mode is active."""
+    try:
+        from .dev_console import get_store
+        return get_store()
+    except ImportError:
+        return None
+
+
 def log(func: Callable) -> Callable:
     """
     Decorator that logs API function calls with request/response info.
@@ -33,14 +42,26 @@ def log(func: Callable) -> Callable:
         
         # Log entry with args (excluding 'self' for cleaner output)
         filtered_args = args[1:] if args else args  # Skip 'self'
-        logger.info(f"[CALL] {func_name} | args={filtered_args} kwargs={kwargs}")
+        log_msg = f"args={filtered_args} kwargs={kwargs}"
+        logger.info(f"[CALL] {func_name} | {log_msg}")
+        
+        # Push to dev console if active
+        store = _get_dev_store()
+        if store:
+            store.add_log("info", func_name, f"CALL: {log_msg}", args=str(filtered_args))
         
         try:
             result = await func(*args, **kwargs)
-            logger.info(f"[RETURN] {func_name} | result={_truncate(result)}")
+            result_str = _truncate(result)
+            logger.info(f"[RETURN] {func_name} | result={result_str}")
+            if store:
+                store.add_log("info", func_name, f"RETURN: {result_str}", result=result_str)
             return result
         except Exception as e:
-            logger.error(f"[ERROR] {func_name} | exception={type(e).__name__}: {e}")
+            error_msg = f"{type(e).__name__}: {e}"
+            logger.error(f"[ERROR] {func_name} | exception={error_msg}")
+            if store:
+                store.add_log("error", func_name, f"ERROR: {error_msg}")
             raise
     
     @functools.wraps(func)
@@ -48,14 +69,25 @@ def log(func: Callable) -> Callable:
         func_name = func.__qualname__
         
         filtered_args = args[1:] if args else args
-        logger.info(f"[CALL] {func_name} | args={filtered_args} kwargs={kwargs}")
+        log_msg = f"args={filtered_args} kwargs={kwargs}"
+        logger.info(f"[CALL] {func_name} | {log_msg}")
+        
+        store = _get_dev_store()
+        if store:
+            store.add_log("info", func_name, f"CALL: {log_msg}", args=str(filtered_args))
         
         try:
             result = func(*args, **kwargs)
-            logger.info(f"[RETURN] {func_name} | result={_truncate(result)}")
+            result_str = _truncate(result)
+            logger.info(f"[RETURN] {func_name} | result={result_str}")
+            if store:
+                store.add_log("info", func_name, f"RETURN: {result_str}", result=result_str)
             return result
         except Exception as e:
-            logger.error(f"[ERROR] {func_name} | exception={type(e).__name__}: {e}")
+            error_msg = f"{type(e).__name__}: {e}"
+            logger.error(f"[ERROR] {func_name} | exception={error_msg}")
+            if store:
+                store.add_log("error", func_name, f"ERROR: {error_msg}")
             raise
     
     # Return appropriate wrapper based on function type
@@ -88,6 +120,9 @@ def speed(func: Callable) -> Callable:
         finally:
             elapsed_ms = (time.perf_counter() - start_time) * 1000
             logger.info(f"[SPEED] {func_name} | {elapsed_ms:.2f}ms")
+            store = _get_dev_store()
+            if store:
+                store.add_speed(func_name, elapsed_ms)
     
     @functools.wraps(func)
     def sync_wrapper(*args, **kwargs) -> Any:
@@ -100,6 +135,9 @@ def speed(func: Callable) -> Callable:
         finally:
             elapsed_ms = (time.perf_counter() - start_time) * 1000
             logger.info(f"[SPEED] {func_name} | {elapsed_ms:.2f}ms")
+            store = _get_dev_store()
+            if store:
+                store.add_speed(func_name, elapsed_ms)
     
     if _is_async(func):
         return async_wrapper
@@ -164,7 +202,14 @@ def version(constraint: str) -> Callable:
                     )
 
                 if client_version:
-                    if not _check_version(client_version, operator, required_version):
+                    passed = _check_version(client_version, operator, required_version)
+                    
+                    # Log to dev console
+                    store = _get_dev_store()
+                    if store:
+                        store.add_version_check(func.__qualname__, constraint, client_version, passed)
+                    
+                    if not passed:
                         return JSONResponse(
                             status_code=400,
                             content={
@@ -198,7 +243,14 @@ def version(constraint: str) -> Callable:
                     )
 
                 if client_version:
-                    if not _check_version(client_version, operator, required_version):
+                    passed = _check_version(client_version, operator, required_version)
+                    
+                    # Log to dev console
+                    store = _get_dev_store()
+                    if store:
+                        store.add_version_check(func.__qualname__, constraint, client_version, passed)
+                    
+                    if not passed:
                         return JSONResponse(
                             status_code=400,
                             content={
