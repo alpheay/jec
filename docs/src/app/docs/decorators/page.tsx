@@ -15,10 +15,10 @@ export default function DecoratorsPage() {
             <section className="mb-12">
                 <h2 className="text-2xl font-semibold text-foreground mb-4">Why Decorators?</h2>
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                    Decorators allow you to wrap your route methods with additional functionality without cluttering the business logic. 
+                    Decorators allow you to wrap your route methods with additional functionality without cluttering the business logic.
                     In JEC, decorators are designed to work seamlessly with class-based routes.
                 </p>
-                
+
                 <div className="grid gap-4 md:grid-cols-2">
                     <a
                         href="/docs/decorators/logging"
@@ -65,6 +65,54 @@ export default function DecoratorsPage() {
                         </h3>
                         <p className="text-sm text-muted-foreground">
                             Semantic versioning enforcement for evolving APIs.
+                        </p>
+                    </a>
+
+                    <a
+                        href="/docs/decorators/deprecated"
+                        className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
+                    >
+                        <h3 className="text-lg font-medium text-foreground mb-2 group-hover:text-accent-blue transition-colors">
+                            @deprecated
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                            Mark endpoints for deprecation with sunset dates and alternatives.
+                        </p>
+                    </a>
+
+                    <a
+                        href="/docs/decorators/ratelimit"
+                        className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
+                    >
+                        <h3 className="text-lg font-medium text-foreground mb-2 group-hover:text-accent-blue transition-colors">
+                            @ratelimit
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                            Prevent abuse by limiting request frequency.
+                        </p>
+                    </a>
+
+                    <a
+                        href="/docs/decorators/timeout"
+                        className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
+                    >
+                        <h3 className="text-lg font-medium text-foreground mb-2 group-hover:text-accent-blue transition-colors">
+                            @timeout
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                            Enforce execution time limits and cancel slow tasks.
+                        </p>
+                    </a>
+
+                    <a
+                        href="/docs/decorators/retry"
+                        className="block p-6 rounded-lg border border-border bg-card hover:border-accent-blue/50 transition-colors group"
+                    >
+                        <h3 className="text-lg font-medium text-foreground mb-2 group-hover:text-accent-blue transition-colors">
+                            @retry
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                            Improve resilience with automatic retries and backoff.
                         </p>
                     </a>
                 </div>

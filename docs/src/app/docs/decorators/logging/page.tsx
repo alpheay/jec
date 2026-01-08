@@ -30,6 +30,12 @@ class Users(Route):
         # Logs: [RETURN] Users.get | result={...}
         return db.get_user(user_id)`}
                 />
+
+                <div className="mt-8 p-4 rounded-lg bg-card border border-border">
+                    <p className="text-muted-foreground">
+                        Need more control over log levels, truncation, or privacy? Check the <a href="/docs/decorators/logging/advanced" className="text-accent-blue hover:text-accent-blue/80 transition-colors">Advanced Usage</a> guide.
+                    </p>
+                </div>
             </section>
         </article>
     );

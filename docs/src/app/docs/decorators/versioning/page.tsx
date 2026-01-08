@@ -35,21 +35,12 @@ class Api(Route):
     async def post(self):
         return "Legacy Endpoint"`}
                 />
-            </section>
 
-            <section className="mb-12">
-                <h2 className="text-2xl font-semibold text-foreground mb-4">Strict Versioning</h2>
-                <div className="p-4 rounded-lg bg-card border border-border">
-                    <p className="text-sm text-muted-foreground">
-                        If <code>strict_versioning=True</code> is set in <code>app.tinker()</code>, checking for the <code>X-API-Version</code> header becomes mandatory.
-                        If the header is missing, the endpoint will return a <code>400 Bad Request</code> error.
+                <div className="mt-8 p-4 rounded-lg bg-card border border-border">
+                    <p className="text-muted-foreground">
+                        Need strict version enforcement, deprecation headers, or sunset dates? Check the <a href="/docs/decorators/versioning/advanced" className="text-accent-blue hover:text-accent-blue/80 transition-colors">Advanced Usage</a> guide.
                     </p>
                 </div>
-                <CodeBlock
-                    language="python"
-                    code={`# main.py
-app.tinker(strict_versioning=True)`}
-                />
             </section>
         </article>
     );

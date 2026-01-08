@@ -78,63 +78,12 @@ async def my_auth(request: Request, roles: list[str] = None) -> bool:
 
 app.set_auth_handler(my_auth)`}
                 />
-            </section>
 
-            <section className="mb-12">
-                <h2 className="text-2xl font-semibold text-foreground mb-4">Advanced Use Cases</h2>
-
-                <h3 className="text-xl font-medium text-foreground mb-3">JWT Validation with User Context</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                    In a real-world scenario, you often want to decode a JWT, validate it, and attach the user to the request.
-                </p>
-                <CodeBlock
-                    language="python"
-                    code={`import jwt
-from fastapi import HTTPException
-
-async def jwt_auth_handler(request: Request, roles: list[str] = None) -> bool:
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return False
-        
-    token = auth_header.split(" ")[1]
-    
-    try:
-        # Decode token
-        payload = jwt.decode(token, "APP_SECRET", algorithms=["HS256"])
-        
-        # Attach user to request state for endpoint access
-        request.state.user = payload
-        
-        # Role Check
-        if roles:
-            user_roles = payload.get("roles", [])
-            has_permission = any(role in user_roles for role in roles)
-            if not has_permission:
-                raise HTTPException(status_code=403, detail="Insufficient Permissions")
-                
-        return True
-        
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        return False # Invalid token`}
-                />
-
-                <h3 className="text-xl font-medium text-foreground mb-3 mt-8">Accessing User Data in Endpoints</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                    Since the handler can modify <code>request.state</code>, you can access authentication data in your routes.
-                </p>
-                <CodeBlock
-                    filename="routes/profile.py"
-                    language="python"
-                    code={`class UserProfile(Route):
-    @auth(True)
-    async def get(self, request: Request):
-        # Access user data set by the auth handler
-        user_id = request.state.user["id"]
-        return {"id": user_id, "name": request.state.user["name"]}`}
-                />
+                <div className="mt-8 p-4 rounded-lg bg-card border border-border">
+                    <p className="text-muted-foreground">
+                        Need JWT integration, scope validation, or user context management? Check the <a href="/docs/decorators/authentication/advanced" className="text-accent-blue hover:text-accent-blue/80 transition-colors">Advanced Usage</a> guide.
+                    </p>
+                </div>
             </section>
         </article>
     );

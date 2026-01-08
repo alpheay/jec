@@ -63,10 +63,38 @@ const navigation: NavSection[] = [
                 href: "/docs/decorators",
                 icon: <Code2 className="w-4 h-4" />,
                 items: [
-                    { title: "Authentication", href: "/docs/decorators/authentication" },
-                    { title: "Logging", href: "/docs/decorators/logging" },
-                    { title: "Speed", href: "/docs/decorators/speed" },
-                    { title: "Versioning", href: "/docs/decorators/versioning" }
+                    {
+                        title: "Authentication",
+                        href: "/docs/decorators/authentication",
+                        items: [
+                            { title: "Advanced Auth", href: "/docs/decorators/authentication/advanced" }
+                        ]
+                    },
+                    {
+                        title: "Logging",
+                        href: "/docs/decorators/logging",
+                        items: [
+                            { title: "Advanced Logging", href: "/docs/decorators/logging/advanced" }
+                        ]
+                    },
+                    {
+                        title: "Speed",
+                        href: "/docs/decorators/speed",
+                        items: [
+                            { title: "Advanced Monitoring", href: "/docs/decorators/speed/advanced" }
+                        ]
+                    },
+                    {
+                        title: "Versioning",
+                        href: "/docs/decorators/versioning",
+                        items: [
+                            { title: "Advanced Versioning", href: "/docs/decorators/versioning/advanced" }
+                        ]
+                    },
+                    { title: "Deprecated", href: "/docs/decorators/deprecated" },
+                    { title: "Rate Limit", href: "/docs/decorators/ratelimit" },
+                    { title: "Timeout", href: "/docs/decorators/timeout" },
+                    { title: "Retry", href: "/docs/decorators/retry" },
                 ]
             },
             { title: "Developer Tools", href: "/docs/dev-tools", icon: <Terminal className="w-4 h-4" /> },

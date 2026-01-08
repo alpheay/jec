@@ -29,6 +29,12 @@ class HeavyProcess(Route):
         # Logs: [SPEED] HeavyProcess.post | 145.23ms
         return {"status": "done"}`}
                 />
+
+                <div className="mt-8 p-4 rounded-lg bg-card border border-border">
+                    <p className="text-muted-foreground">
+                        Need SLAs, error thresholds, or public response headers? Check the <a href="/docs/decorators/speed/advanced" className="text-accent-blue hover:text-accent-blue/80 transition-colors">Advanced Usage</a> guide.
+                    </p>
+                </div>
             </section>
         </article>
     );
