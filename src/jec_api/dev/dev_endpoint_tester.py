@@ -103,22 +103,25 @@ def get_tester_html() -> tuple[str, str, str]:
                         <div class="workspace-input">
                             <div class="section-title">Request Body</div>
                             <div class="editor-container">
-                                <textarea id="request-editor" spellcheck="false"></textarea>
+                                <textarea id="request-editor" spellcheck="false" placeholder="Enter request body..."></textarea>
                             </div>
                             <div class="input-actions">
-                                <button class="btn btn-primary" id="send-btn" onclick="sendRequest()">
+                                <button class="tester-btn tester-btn-primary" id="send-btn" onclick="sendRequest()">
+                                    <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                     <span>Send Request</span>
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                 </button>
-                                <button class="btn" onclick="resetDefaultBody()">Reset to Default</button>
+                                <button class="tester-btn" onclick="resetDefaultBody()">
+                                    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                                    Reset
+                                </button>
                             </div>
                         </div>
                         
                         <div class="workspace-output">
                             <div class="section-title">
                                 Response
-                                <span class="status-badge hidden" id="response-status">200 OK</span>
-                                <span class="time-badge hidden" id="response-time">120ms</span>
+                                <span class="response-status hidden" id="response-status">200 OK</span>
+                                <span class="response-time hidden" id="response-time">120ms</span>
                             </div>
                             <div class="editor-container">
                                 <div id="response-viewer" class="code-viewer"></div>
@@ -134,26 +137,34 @@ def get_tester_html() -> tuple[str, str, str]:
     css = """
     .tester-overlay {
         position: fixed;
-        top: 60px; /* Header height */
+        top: 60px;
         left: 0;
         right: 0;
         bottom: 0;
         background: var(--bg-primary);
         z-index: 50;
         transform: translateY(100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
         display: flex;
         flex-direction: column;
     }
     
     .tester-overlay.visible {
         transform: translateY(0);
+        opacity: 1;
     }
     
     .tester-container {
         display: flex;
         flex-direction: column;
         height: 100%;
+        animation: fadeInUp 0.3s ease forwards;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     
     .tester-content {
@@ -163,65 +174,81 @@ def get_tester_html() -> tuple[str, str, str]:
     }
     
     .tester-sidebar {
-        width: 300px;
+        width: 320px;
         border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
-        background: var(--bg-card);
+        background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
     }
     
     .search-box {
-        padding: 12px;
+        padding: 16px;
         border-bottom: 1px solid var(--border);
+        background: var(--bg-elevated);
     }
     
     .search-box input {
         width: 100%;
-        padding: 8px 12px;
-        background: var(--bg-elevated);
+        padding: 10px 14px;
+        background: var(--bg-primary);
         border: 1px solid var(--border);
-        border-radius: 4px;
+        border-radius: 8px;
         color: var(--text-primary);
         font-size: 13px;
         outline: none;
+        transition: all 0.2s ease;
+    }
+    
+    .search-box input::placeholder {
+        color: var(--text-dim);
     }
     
     .search-box input:focus {
         border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
     
     .endpoint-list {
         flex: 1;
         overflow-y: auto;
+        padding: 8px 0;
     }
     
     .endpoint-item {
-        padding: 10px 16px;
+        padding: 12px 16px;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 10px;
-        border-bottom: 1px solid var(--border-light);
-        transition: background 0.1s;
+        gap: 12px;
+        margin: 2px 8px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
     }
     
     .endpoint-item:hover {
         background: var(--bg-hover);
+        border-color: var(--border);
     }
     
     .endpoint-item.active {
-        background: var(--bg-active);
-        border-left: 2px solid var(--accent-blue);
-        padding-left: 14px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+        border-color: rgba(59, 130, 246, 0.3);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
     }
     
     .endpoint-item .path {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
+        font-size: 12px;
         color: var(--text-secondary);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        flex: 1;
+    }
+    
+    .endpoint-item.active .path {
+        color: var(--text-primary);
     }
     
     .tester-main {
@@ -235,31 +262,57 @@ def get_tester_html() -> tuple[str, str, str]:
     .tester-empty-state {
         flex: 1;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         color: var(--text-dim);
         font-size: 14px;
+        gap: 16px;
+    }
+    
+    .tester-empty-state::before {
+        content: '';
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .tester-workspace {
         display: flex;
         flex-direction: column;
         height: 100%;
+        animation: fadeIn 0.25s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
     
     .workspace-header {
-        padding: 16px 24px;
+        padding: 20px 24px;
         border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
-        gap: 12px;
-        background: var(--bg-secondary);
+        gap: 16px;
+        background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    }
+    
+    .workspace-header .method-badge {
+        padding: 6px 12px;
+        font-size: 11px;
     }
     
     .path-display {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 14px;
+        font-size: 15px;
         color: var(--text-primary);
+        font-weight: 500;
     }
     
     .workspace-split {
@@ -272,24 +325,29 @@ def get_tester_html() -> tuple[str, str, str]:
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding: 16px;
+        padding: 20px;
         min-width: 0;
     }
     
     .workspace-input {
         border-right: 1px solid var(--border);
+        background: var(--bg-primary);
+    }
+    
+    .workspace-output {
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
     }
     
     .section-title {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         height: 24px;
     }
     
@@ -297,9 +355,15 @@ def get_tester_html() -> tuple[str, str, str]:
         flex: 1;
         background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 6px;
+        border-radius: 10px;
         overflow: hidden;
         position: relative;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .editor-container:focus-within {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
     
     #request-editor {
@@ -310,85 +374,144 @@ def get_tester_html() -> tuple[str, str, str]:
         color: var(--text-primary);
         font-family: 'JetBrains Mono', monospace;
         font-size: 13px;
-        padding: 12px;
+        padding: 16px;
         resize: none;
         outline: none;
-        line-height: 1.5;
+        line-height: 1.6;
+    }
+    
+    #request-editor::placeholder {
+        color: var(--text-dim);
+    }
+    
+    #request-editor:disabled {
+        background: var(--bg-primary);
+        opacity: 0.6;
+        cursor: not-allowed;
     }
     
     .code-viewer {
         width: 100%;
         height: 100%;
         overflow: auto;
-        padding: 12px;
+        padding: 16px;
         font-family: 'JetBrains Mono', monospace;
         font-size: 13px;
         color: var(--text-primary);
         white-space: pre-wrap;
+        line-height: 1.6;
     }
     
-    .code-viewer .key { color: var(--accent-blue); }
-    .code-viewer .string { color: var(--accent-green); }
-    .code-viewer .number { color: var(--accent-orange); }
-    .code-viewer .boolean { color: var(--accent-violet); }
-    .code-viewer .null { color: var(--text-dim); }
+    .code-viewer .key { color: #60a5fa; }
+    .code-viewer .string { color: #34d399; }
+    .code-viewer .number { color: #fb923c; }
+    .code-viewer .boolean { color: #a78bfa; }
+    .code-viewer .null { color: var(--text-dim); font-style: italic; }
     
     .input-actions {
-        margin-top: 12px;
+        margin-top: 16px;
         display: flex;
-        gap: 10px;
+        gap: 12px;
     }
     
-    .btn-primary {
-        background: var(--accent-blue);
-        color: white;
-        border: none;
+    .tester-btn {
+        padding: 10px 18px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 13px;
+        font-family: inherit;
+        font-weight: 500;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         gap: 8px;
     }
     
-    .btn-primary:hover {
-        background: #2563eb;
+    .tester-btn:hover {
+        background: var(--bg-hover);
+        border-color: var(--border-light);
+        color: var(--text-primary);
+        transform: translateY(-1px);
     }
     
-    .btn svg {
-        width: 14px;
-        height: 14px;
+    .tester-btn:active {
+        transform: translateY(0);
+    }
+    
+    .tester-btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        color: white;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    .tester-btn-primary:hover {
+        background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        color: white;
+    }
+    
+    .tester-btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+    
+    .tester-btn svg {
+        width: 16px;
+        height: 16px;
         stroke: currentColor;
         stroke-width: 2;
         fill: none;
     }
     
-    .header-actions-right {
-        display: flex;
-        gap: 10px;
-    }
-    
-    #toggle-tester.active {
-        background: var(--bg-active);
-        color: var(--text-primary);
-        border-color: var(--border-light);
-    }
-    
     .hidden { display: none !important; }
     
-    .status-badge {
-        padding: 2px 6px;
-        border-radius: 3px;
+    .response-status {
+        padding: 4px 10px;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
         background: var(--bg-hover);
         color: var(--text-primary);
     }
     
-    .status-badge.success { background: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
-    .status-badge.error { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+    .response-status.success { 
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%);
+        color: var(--accent-green);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .response-status.error { 
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%);
+        color: var(--accent-red);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
     
-    .time-badge {
+    .response-time {
         font-family: 'JetBrains Mono', monospace;
         font-size: 11px;
         color: var(--text-muted);
+        padding: 4px 8px;
+        background: var(--bg-hover);
+        border-radius: 4px;
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
     }
     """
     
@@ -492,7 +615,7 @@ def get_tester_html() -> tuple[str, str, str]:
         
         const btn = document.getElementById('send-btn');
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<span>Sending...</span>';
+        btn.innerHTML = '<span class="loading-spinner"></span><span>Sending...</span>';
         btn.disabled = true;
         
         const startTime = performance.now();
@@ -526,7 +649,7 @@ def get_tester_html() -> tuple[str, str, str]:
             // Update status
             const statusEl = document.getElementById('response-status');
             statusEl.textContent = `${res.status} ${res.statusText}`;
-            statusEl.className = `status-badge ${res.ok ? 'success' : 'error'}`;
+            statusEl.className = `response-status ${res.ok ? 'success' : 'error'}`;
             statusEl.classList.remove('hidden');
             
             // Update time
@@ -555,7 +678,7 @@ def get_tester_html() -> tuple[str, str, str]:
         } catch (e) {
             document.getElementById('response-viewer').textContent = 'Error: ' + e.message;
             document.getElementById('response-status').textContent = 'Network Error';
-            document.getElementById('response-status').className = 'status-badge error';
+            document.getElementById('response-status').className = 'response-status error';
             document.getElementById('response-status').classList.remove('hidden');
         } finally {
             btn.innerHTML = originalText;
