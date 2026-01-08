@@ -150,6 +150,19 @@ def version(constraint: str) -> Callable:
             if request:
                 client_version = request.headers.get("X-API-Version")
                 
+                # Check for strict versioning
+                strict_versioning = getattr(request.app, "strict_versioning", False)
+                
+                if not client_version and strict_versioning:
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "error": "API version required",
+                            "detail": "This API requires strict versioning. Please provide the X-API-Version header.",
+                            "required": "true"
+                        }
+                    )
+
                 if client_version:
                     if not _check_version(client_version, operator, required_version):
                         return JSONResponse(
@@ -171,6 +184,19 @@ def version(constraint: str) -> Callable:
             if request:
                 client_version = request.headers.get("X-API-Version")
                 
+                # Check for strict versioning
+                strict_versioning = getattr(request.app, "strict_versioning", False)
+                
+                if not client_version and strict_versioning:
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "error": "API version required",
+                            "detail": "This API requires strict versioning. Please provide the X-API-Version header.",
+                            "required": "true"
+                        }
+                    )
+
                 if client_version:
                     if not _check_version(client_version, operator, required_version):
                         return JSONResponse(

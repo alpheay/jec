@@ -21,6 +21,8 @@ class Core(FastAPI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._registered_routes: List[Type[Route]] = []
+        self._uvicorn_config: dict = {}
+        self.strict_versioning: bool = False
     
     def register(self, route_class: Type[Route], **router_kwargs) -> "Core":
         """
@@ -110,6 +112,55 @@ class Core(FastAPI):
         
         return self
     
+
+    def tinker(self, **kwargs) -> "Core":
+        """
+        Configure the application and underlying uvicorn server.
+        
+        Args:
+            **kwargs: Configuration options.
+                - FastAPI attributes (title, description, etc.) update the app.
+                - strict_versioning: Enable strict API version enforcement (default: False).
+                - All other kwargs are stored and passed to uvicorn.run().
+        
+        Returns:
+            Self for method chaining
+        """
+        # Handle strict_versioning specifically
+        if "strict_versioning" in kwargs:
+            self.strict_versioning = kwargs.pop("strict_versioning")
+        
+        # FastAPI attributes that can be updated
+        app_attrs = {
+            "title", "description", "version", "openapi_url", "docs_url", 
+            "redoc_url", "swagger_ui_oauth2_redirect_url", "swagger_ui_init_oauth",
+            "middleware", "exception_handlers", "on_startup", "on_shutdown",
+            "lifespan", "terms_of_service", "contact", "license_info", 
+            "servers", "root_path", "root_path_in_servers", "responses", 
+            "callbacks", "webhooks", "deprecated", "include_in_schema",
+            "debug"
+        }
+        
+        for k, v in kwargs.items():
+            if k in app_attrs:
+                if hasattr(self, k):
+                    setattr(self, k, v)
+            else:
+                self._uvicorn_config[k] = v
+        
+        return self
+
+    def run(self):
+        """
+        Run the application using uvicorn.
+        """
+        import uvicorn
+        config = self._uvicorn_config.copy()
+        # Default to 127.0.0.1 if host not specified to match uvicorn CLI behavior
+        if "host" not in config:
+            config["host"] = "127.0.0.1"
+        uvicorn.run(self, **config)
+
     def get_registered_routes(self) -> List[Type[Route]]:
         """Get a list of all registered Route classes."""
         return self._registered_routes.copy()
