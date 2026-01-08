@@ -77,14 +77,7 @@ def get_tester_html() -> tuple[str, str, str]:
     """
     
     html = """
-    <div class="tester-container">
-        <div class="tester-header">
-            <h3>Endpoint Tester</h3>
-            <button class="close-tester" onclick="toggleTester()">
-                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-        
+    <div class="tester-container">    
         <div class="tester-content">
             <div class="tester-sidebar">
                 <div class="search-box">
@@ -161,21 +154,6 @@ def get_tester_html() -> tuple[str, str, str]:
         display: flex;
         flex-direction: column;
         height: 100%;
-    }
-    
-    .tester-header {
-        padding: 12px 24px;
-        background: var(--bg-secondary);
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .tester-header h3 {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--text-primary);
     }
     
     .tester-content {
