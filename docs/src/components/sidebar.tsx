@@ -49,25 +49,6 @@ const navigation: NavSection[] = [
         ],
     },
     {
-        title: "Demos",
-        items: [
-            {
-                title: "Nesting Demo",
-                href: "/docs/demo",
-                icon: <Layout className="w-4 h-4" />,
-                items: [
-                    {
-                        title: "Nested Page",
-                        href: "/docs/demo/nested",
-                        items: [
-                            { title: "Deep Page", href: "/docs/demo/nested/deep" }
-                        ]
-                    }
-                ]
-            }
-        ]
-    },
-    {
         title: "Resources",
         items: [
             { title: "GitHub", href: "https://github.com/alpheay/jec", icon: <ExternalLink className="w-4 h-4" />, external: true },
