@@ -25,7 +25,7 @@ export default function Home() {
           <div className="flex justify-center mb-8">
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-4 py-1.5 text-sm backdrop-blur-sm">
               <Sparkles className="w-4 h-4 text-accent-yellow" />
-              <span className="text-muted-foreground">Version 0.0.6 — Now with Dev Console</span>
+              <span className="text-muted-foreground">Version 0.0.9 — Freakishly Good</span>
             </div>
           </div>
 
