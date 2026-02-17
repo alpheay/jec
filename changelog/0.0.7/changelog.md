@@ -1,10 +1,10 @@
-# Changelog 0.0.8
+# Changelog 0.0.7
 
 ## New Features
 
 ### Authentication & Authorization System
 
-The 0.0.8 release introduces a robust, flexible authentication system designed to work seamlessly with JEC's class-based routes.
+The 0.0.7 release introduces a robust, flexible authentication system designed to work seamlessly with JEC's class-based routes.
 
 #### The `@auth` Decorator
 You can now secure your endpoints using the `@auth` decorator found in `jec_api.decorators`.
