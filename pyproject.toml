@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jec-api"
-version = "0.0.9"
+version = "0.1.1"
 description = "Just Encapsulated Controllers — The Class-Based System for Application Program Interfaces"
 readme = "README.md"
 license = "MIT"
@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["fastapi", "api", "routes", "class-based", "web"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Framework :: FastAPI",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
@@ -27,13 +27,13 @@ classifiers = [
 ]
 dependencies = [
     "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+    "httpx>=0.24.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
-    "httpx>=0.24.0",
-    "uvicorn>=0.20.0",
 ]
 
 [project.urls]
