@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jec-api"
-version = "0.1.1"
+version = "0.1.2"
 description = "Just Encapsulated Controllers — The Class-Based System for Application Program Interfaces"
 readme = "README.md"
 license = "MIT"
