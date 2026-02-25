@@ -7,6 +7,8 @@ from fastapi.routing import APIRoute
 
 from .route import Route
 from .discovery import discover_routes
+from .error_handling import register_default_error_handlers
+from .decorator.cache import set_cache_backend, MemoryCacheBackend
 
 
 class Core(FastAPI):
@@ -27,6 +29,11 @@ class Core(FastAPI):
         self._dev_enabled: bool = False
         self._dev_path: str = "/__dev__"
         self.auth_handler: Optional[Callable] = None
+        self.error_envelope: bool = True
+        self.error_include_details: bool = True
+        self.error_redaction: bool = True
+        self.cache_backend: str = "memory"
+        register_default_error_handlers(self)
     
     def set_auth_handler(self, handler: Callable) -> "Core":
         """
@@ -147,6 +154,10 @@ class Core(FastAPI):
                 - strict_versioning: Enable strict API version enforcement (default: False).
                 - dev: Enable dev console for debugging (default: False).
                 - dev_path: Path for dev console (default: "/__dev__").
+                - error_envelope: Enable JEC standardized error envelope (default: True).
+                - error_include_details: Include structured error details in envelopes (default: True).
+                - error_redaction: Redact sensitive values in error details (default: True).
+                - cache_backend: Cache backend name, currently supports "memory" (default: "memory").
                 - All other kwargs are stored and passed to uvicorn.run().
         
         Returns:
@@ -160,6 +171,20 @@ class Core(FastAPI):
         if "dev" in kwargs:
             self._dev_enabled = kwargs.pop("dev")
         
+        if "error_envelope" in kwargs:
+            self.error_envelope = kwargs.pop("error_envelope")
+
+        if "error_include_details" in kwargs:
+            self.error_include_details = kwargs.pop("error_include_details")
+
+        if "error_redaction" in kwargs:
+            self.error_redaction = kwargs.pop("error_redaction")
+
+        if "cache_backend" in kwargs:
+            self.cache_backend = kwargs.pop("cache_backend")
+            if self.cache_backend == "memory":
+                set_cache_backend(MemoryCacheBackend())
+
         # Handle dev_path
         if "dev_path" in kwargs:
             self._dev_path = kwargs.pop("dev_path")
