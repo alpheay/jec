@@ -2,12 +2,16 @@
 
 import importlib
 import importlib.util
+import inspect
+import logging
 import pkgutil
 import sys
 from pathlib import Path
 from typing import List, Type
 
 from .route import Route
+
+logger = logging.getLogger("jec_api.discovery")
 
 
 def discover_routes(package: str, *, recursive: bool = True) -> List[Type[Route]]:
@@ -23,25 +27,72 @@ def discover_routes(package: str, *, recursive: bool = True) -> List[Type[Route]
     """
     route_classes: List[Type[Route]] = []
     
-    # Check if it's a path or a package name
+    # Check if it's an absolute path or a path that exists relative to cwd
     package_path = Path(package)
     
-    if package_path.is_dir():
-        # It's a directory path
+    if package_path.is_absolute() and package_path.is_dir():
+        # Absolute directory path provided directly
         route_classes.extend(_discover_from_directory(package_path, recursive))
+    elif package_path.is_dir():
+        # Relative path that resolves from cwd - resolve it fully
+        route_classes.extend(_discover_from_directory(package_path.resolve(), recursive))
     else:
-        # Try as a package name
+        # Try as a Python package name first
         try:
             route_classes.extend(_discover_from_package(package, recursive))
         except ModuleNotFoundError:
-            # Maybe it's a relative path from cwd
-            cwd_path = Path.cwd() / package
-            if cwd_path.is_dir():
-                route_classes.extend(_discover_from_directory(cwd_path, recursive))
+            # Not an installed/importable package - try resolving as a relative
+            # directory from the caller's file location (not cwd, which is unreliable)
+            resolved = _resolve_from_caller(package)
+            if resolved is not None and resolved.is_dir():
+                route_classes.extend(_discover_from_directory(resolved, recursive))
             else:
-                raise ValueError(f"Could not find package or directory: {package}")
+                # Also try cwd as a last resort for backwards compatibility
+                cwd_path = Path.cwd() / package
+                if cwd_path.is_dir():
+                    route_classes.extend(_discover_from_directory(cwd_path, recursive))
+                else:
+                    locations_tried = [f"package '{package}'"]
+                    if resolved is not None:
+                        locations_tried.append(str(resolved))
+                    locations_tried.append(str(cwd_path))
+                    raise ValueError(
+                        f"Could not find package or directory: '{package}'. "
+                        f"Looked in: {', '.join(locations_tried)}"
+                    )
     
     return route_classes
+
+
+def _resolve_from_caller(package: str) -> "Path | None":
+    """
+    Resolve a package/directory name relative to the calling file's location.
+    
+    Walks the call stack to find the first frame outside of jec_api,
+    then resolves the package name relative to that file's directory.
+    This makes discovery work regardless of process working directory.
+    """
+    frame = inspect.currentframe()
+    try:
+        # Walk up the stack to find the caller outside jec_api
+        caller_frame = frame
+        while caller_frame is not None:
+            caller_frame = caller_frame.f_back
+            if caller_frame is None:
+                break
+            caller_file = caller_frame.f_globals.get("__file__")
+            if caller_file is None:
+                continue
+            caller_path = Path(caller_file).resolve()
+            # Skip frames from within jec_api itself
+            this_package_dir = Path(__file__).resolve().parent
+            if not str(caller_path).startswith(str(this_package_dir)):
+                caller_dir = caller_path.parent
+                candidate = caller_dir / package
+                return candidate
+    finally:
+        del frame
+    return None
 
 
 def _discover_from_package(package_name: str, recursive: bool) -> List[Type[Route]]:
@@ -68,8 +119,12 @@ def _discover_from_package(package_name: str, recursive: bool) -> List[Type[Rout
         try:
             module = importlib.import_module(modname)
             route_classes.extend(_extract_routes_from_module(module))
-        except Exception:
-            # Skip modules that fail to import
+        except Exception as e:
+            logger.warning(
+                "Failed to import module '%s' during route discovery: %s",
+                modname,
+                e,
+            )
             continue
     
     return route_classes
@@ -78,14 +133,19 @@ def _discover_from_package(package_name: str, recursive: bool) -> List[Type[Rout
 def _discover_from_directory(directory: Path, recursive: bool) -> List[Type[Route]]:
     """Discover routes from a directory of Python files."""
     route_classes: List[Type[Route]] = []
+    directory = directory.resolve()
     
-    # Add directory to sys.path temporarily if needed
-    dir_str = str(directory.parent.resolve())
-    added_to_path = False
+    # Add both the directory itself and its parent to sys.path so that:
+    # - modules inside the directory can be imported by name
+    # - the directory can be treated as a package (imported by its folder name)
+    paths_to_add = []
+    dir_str = str(directory)
+    parent_str = str(directory.parent)
     
-    if dir_str not in sys.path:
-        sys.path.insert(0, dir_str)
-        added_to_path = True
+    for p in (dir_str, parent_str):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+            paths_to_add.append(p)
     
     try:
         pattern = "**/*.py" if recursive else "*.py"
@@ -98,12 +158,19 @@ def _discover_from_directory(directory: Path, recursive: bool) -> List[Type[Rout
                 module = _load_module_from_file(py_file)
                 if module:
                     route_classes.extend(_extract_routes_from_module(module))
-            except Exception:
-                # Skip files that fail to import
+            except Exception as e:
+                logger.warning(
+                    "Failed to import '%s' during route discovery: %s",
+                    py_file,
+                    e,
+                )
                 continue
     finally:
-        if added_to_path:
-            sys.path.remove(dir_str)
+        for p in paths_to_add:
+            try:
+                sys.path.remove(p)
+            except ValueError:
+                pass
     
     return route_classes
 
